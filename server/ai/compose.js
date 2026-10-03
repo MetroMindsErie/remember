@@ -275,11 +275,19 @@ export function composeStory(lens, ranked, signals) {
           ? `Reading across everything you have written, the strongest patterns are ${list(vals.map((v) => v.label.toLowerCase()), { max: 5 })}.`
           : 'Add a few more memories and the patterns will start to show.'
       );
-      for (const v of vals.slice(0, 3)) {
-        paragraphs.push(
-          `**${v.label}.** This shows up in ${plural(v.memories, 'memory', 'memories')} — strongly enough that it reads as something you actually organise your life around, not just something that happened once.`
-        );
-      }
+      // Each theme needs its own sentence. Repeating one line verbatim down the
+      // list makes the whole section read as a template, which is exactly the
+      // impression this app cannot afford to give.
+      const THEME_LINES = [
+        (v) => `It is the strongest signal in everything you have written — present in ${plural(v.memories, 'memory', 'memories')}, across different parts of your life.`,
+        (v) => `${plural(v.memories, 'memory', 'memories')} lean this way. Not one defining event, but a habit of what you reach for.`,
+        (v) => `This turns up in ${plural(v.memories, 'memory', 'memories')} you wrote about completely different things, which is usually how a real value shows itself.`,
+        (v) => `Quieter than the others, but it is there in ${plural(v.memories, 'memory', 'memories')} and it keeps coming back.`,
+        (v) => `${plural(v.memories, 'memory', 'memories')} point here. Worth noticing, even if you would not have named it yourself.`,
+      ];
+      vals.slice(0, 4).forEach((v, i) => {
+        paragraphs.push(`**${v.label}.** ${THEME_LINES[i % THEME_LINES.length](v)}`);
+      });
       paragraphs.push(
         `These were not picked from a questionnaire. They came out of running your own sentences through a model on this server and seeing what they cluster around.`
       );
