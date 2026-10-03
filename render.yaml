@@ -1,0 +1,48 @@
+# Render blueprint for Remember.
+#
+# One web service, one persistent disk. Everything the app needs — the SQLite
+# database, uploaded photos and the open-weight model cache — lives on that
+# disk, so there is no managed database to pay for and nothing to expire.
+#
+# Deploy: push this repo to GitHub, then on Render choose
+# "New → Blueprint" and point it at the repo.
+
+services:
+  - type: web
+    name: remember
+    runtime: node
+    plan: starter          # 512MB RAM — enough for int8 MiniLM. Free tier has no disks.
+    region: oregon
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+
+    disk:
+      name: remember-data
+      mountPath: /var/data
+      sizeGB: 1            # SQLite + photos + ~25MB model cache
+
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+
+      # Database, uploads and the model cache all live on the disk above, so
+      # they survive deploys and restarts.
+      - key: DATA_DIR
+        value: /var/data
+
+      # Open-weight embedding model. Downloaded once on first boot into
+      # DATA_DIR/model-cache, then served entirely from this instance.
+      - key: EMBEDDING_MODEL
+        value: Xenova/all-MiniLM-L6-v2
+
+      # Optional open-weight LLM for warmer prose. The app is fully functional
+      # without these — leave them unset and the built-in composer writes the
+      # reflections. Set them in the Render dashboard, not here.
+      - key: OPEN_MODEL_BASE_URL
+        sync: false
+      - key: OPEN_MODEL_NAME
+        sync: false
+      - key: OPEN_MODEL_API_KEY
+        sync: false

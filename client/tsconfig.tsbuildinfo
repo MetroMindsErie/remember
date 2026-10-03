@@ -1,0 +1,1 @@
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/memorycard.tsx","./src/lib/api.ts","./src/lib/types.ts","./src/lib/ui.tsx","./src/pages/addmemory.tsx","./src/pages/explore.tsx","./src/pages/home.tsx","./src/pages/insights.tsx","./src/pages/prompts.tsx","./src/pages/remindme.tsx","./src/pages/settings.tsx","./src/pages/timeline.tsx"],"version":"5.9.3"}
