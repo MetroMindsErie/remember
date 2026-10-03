@@ -17,7 +17,15 @@
 const BASE_URL = (process.env.OPEN_MODEL_BASE_URL || '').replace(/\/+$/, '');
 const MODEL = process.env.OPEN_MODEL_NAME || '';
 const API_KEY = process.env.OPEN_MODEL_API_KEY || '';
-const TIMEOUT_MS = Number(process.env.OPEN_MODEL_TIMEOUT_MS || 25000);
+// A local 7-8B model on consumer CPU takes 20-30s for a reflection; a hosted
+// open-weight endpoint takes 1-3s. The old 25s default sat right on top of the
+// local figure, so self-hosted setups timed out roughly half the time and ate
+// the full wait before falling back — the worst of both. 45s clears local.
+const TIMEOUT_MS = Number(process.env.OPEN_MODEL_TIMEOUT_MS || 45000);
+// Deliberately low. This is a rewriting job over somebody's real life, not a
+// creative one: every degree of extra temperature buys warmth at the cost of
+// invented detail, and invented detail is the one thing this app cannot ship.
+const TEMPERATURE = Number(process.env.OPEN_MODEL_TEMPERATURE ?? 0.2);
 
 export function llmStatus() {
   return {
@@ -34,6 +42,9 @@ You will be given (a) structured facts drawn from one person's own saved memorie
 
 Hard rules:
 - Use ONLY the facts provided. Never invent a person, place, event, date or feeling that is not there.
+- Treat every memory title as a fixed phrase. Do not reinterpret what one means, do not expand it, and do not guess at the story behind it. "Three years clean" is a milestone someone reached — it is not three years of struggle. If you are not certain what a title refers to, repeat it verbatim and say nothing further about it.
+- Do not add sensory or descriptive colour that was not given to you. No "sun-kissed beaches", no weather, no time of day, no detail about what a place looked like.
+- Do not estimate or characterise spans of time. If you were not given a number of years, do not state one.
 - Address the person as "you". Never use their name unless it appears in the facts.
 - Be specific. Name the actual people, places and memory titles you were given. Specificity is the entire point; generic affirmation is worse than nothing.
 - Warm and grounding, never clinical, never therapeutic-boilerplate, never saccharine. No emoji. No bullet lists.
@@ -41,7 +52,7 @@ Hard rules:
 - Never give medical, clinical or crisis advice.
 - 4 to 6 short paragraphs. Plain prose. Return the rewritten reflection only, with no preamble.`;
 
-async function chat(messages, { maxTokens = 900, temperature = 0.7 } = {}) {
+async function chat(messages, { maxTokens = 900, temperature = TEMPERATURE } = {}) {
   if (!BASE_URL || !MODEL) return null;
 
   const controller = new AbortController();
