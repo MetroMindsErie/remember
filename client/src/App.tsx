@@ -4,6 +4,7 @@ import { Icons } from './lib/ui';
 
 import Home from './pages/Home';
 import AddMemory from './pages/AddMemory';
+import Capture from './pages/Capture';
 import Timeline from './pages/Timeline';
 import RemindMe from './pages/RemindMe';
 import Explore from './pages/Explore';
@@ -14,7 +15,7 @@ import Settings from './pages/Settings';
 const NAV = [
   { to: '/',          label: 'Home',     icon: Icons.home },
   { to: '/timeline',  label: 'Timeline', icon: Icons.timeline },
-  { to: '/add',       label: 'Add',      icon: Icons.plus },
+  { to: '/capture',   label: 'Capture',  icon: Icons.plus },
   { to: '/explore',   label: 'Explore',  icon: Icons.book },
   { to: '/insights',  label: 'Insights', icon: Icons.chart },
 ];
@@ -31,6 +32,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/add" element={<AddMemory />} />
+          <Route path="/capture" element={<Capture />} />
           <Route path="/timeline" element={<Timeline />} />
           <Route path="/remind-me" element={<RemindMe />} />
           <Route path="/explore" element={<Explore />} />

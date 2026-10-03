@@ -1,41 +1,8 @@
 import { useState } from 'react';
 import type { Memory } from '../lib/types';
 import { CategoryBadge, FeelingBadge, Icons, feelingStyle } from '../lib/ui';
-
-/** Turns a music/video URL into an embed when we recognise the host. */
-function embedUrl(raw: string): { src: string; kind: 'video' | 'audio' } | null {
-  try {
-    const u = new URL(raw);
-    const host = u.hostname.replace(/^www\./, '');
-
-    if (host === 'youtube.com' || host === 'm.youtube.com') {
-      const v = u.searchParams.get('v');
-      if (v) return { src: `https://www.youtube.com/embed/${v}`, kind: 'video' };
-      if (u.pathname.startsWith('/shorts/')) {
-        return { src: `https://www.youtube.com/embed/${u.pathname.split('/')[2]}`, kind: 'video' };
-      }
-    }
-    if (host === 'youtu.be') {
-      return { src: `https://www.youtube.com/embed${u.pathname}`, kind: 'video' };
-    }
-    if (host === 'open.spotify.com') {
-      return { src: `https://open.spotify.com/embed${u.pathname}`, kind: 'audio' };
-    }
-    if (host === 'vimeo.com') {
-      return { src: `https://player.vimeo.com/video${u.pathname}`, kind: 'video' };
-    }
-    if (host === 'music.apple.com') {
-      return { src: `https://embed.music.apple.com${u.pathname}${u.search}`, kind: 'audio' };
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-function hostOf(raw: string) {
-  try { return new URL(raw).hostname.replace(/^www\./, ''); } catch { return raw; }
-}
+import { MediaGallery } from './MediaGallery';
+import { embedUrl, hostOf } from '../lib/embed';
 
 function MediaLink({ url, icon, label }: { url: string; icon: JSX.Element; label: string }) {
   return (
@@ -68,6 +35,7 @@ export function MemoryCard({
   const music = memory.music_url ? embedUrl(memory.music_url) : null;
   const video = memory.video_url ? embedUrl(memory.video_url) : null;
   const hasBody = Boolean(memory.memory_text || memory.meaning);
+  const hasMedia = (memory.attachments?.length ?? 0) > 0;
 
   return (
     <article className="card card-lg stack rise" style={{ gap: 12, overflow: 'hidden' }}>
@@ -106,6 +74,10 @@ export function MemoryCard({
           <FeelingBadge feeling={memory.feeling} />
         </button>
       </div>
+
+      {memory.attachments?.length > 0 && (
+        <MediaGallery items={memory.attachments} title={memory.title} />
+      )}
 
       {memory.photo_url && (
         <img
@@ -218,7 +190,7 @@ export function MemoryCard({
       )}
 
       <div className="spread" style={{ borderTop: '1px solid var(--line-2)', paddingTop: 10, marginTop: 2 }}>
-        {(hasBody || music || video || memory.attachment_url) ? (
+        {(hasBody || hasMedia || music || video || memory.attachment_url) ? (
           <button className="btn btn-sm btn-ghost" onClick={() => setOpen((o) => !o)}>
             {open ? 'Show less' : 'Read more'}
           </button>

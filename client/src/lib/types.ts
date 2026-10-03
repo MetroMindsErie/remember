@@ -1,4 +1,28 @@
+export type Attachment = {
+  id: string;
+  kind: 'photo' | 'video' | 'audio' | 'link';
+  url: string;
+  name: string;
+  mime: string;
+  size: number;
+  caption: string;
+};
+
+export type UploadResult = {
+  files: Attachment[];
+  rejected: { name: string; reason: string }[];
+};
+
+export type Storage = {
+  files: number;
+  bytes: number;
+  pretty: string;
+  limits: { photo: number; video: number; audio: number };
+  maxFiles: number;
+};
+
 export type Memory = {
+  attachments: Attachment[];
   id: string;
   created_at: string;
   updated_at: string;

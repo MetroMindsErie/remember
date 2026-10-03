@@ -3,7 +3,10 @@ import multer from 'multer';
 import path from 'node:path';
 import fs from 'node:fs';
 import { nanoid } from 'nanoid';
-import { db, listMemories, getMemory, getBirthYear, setSetting } from '../db.js';
+import {
+  db, listMemories, getMemory, getBirthYear, setSetting,
+  attachmentsFor, attachmentMap, replaceAttachments,
+} from '../db.js';
 import { paths } from '../paths.js';
 import { parseTimePeriod, chapterFor } from '../timeperiod.js';
 import { CATEGORIES, FEELINGS } from '../ai/anchors.js';
@@ -16,25 +19,117 @@ export const router = express.Router();
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => cb(null, paths.uploads),
   filename: (_req, file, cb) => {
-    const ext = (path.extname(file.originalname) || '.jpg').toLowerCase().slice(0, 10);
+    const ext = (path.extname(file.originalname) || '').toLowerCase().slice(0, 10) || '.bin';
     cb(null, `${Date.now()}-${nanoid(8)}${ext}`);
   },
 });
 
-const ALLOWED_IMAGE = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']);
+/**
+ * What a phone actually produces when you tap "share" after a day out: HEIC
+ * stills, an H.264 or HEVC clip, maybe a voice memo. All of it is allowed.
+ */
+const ALLOWED = {
+  photo: new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif', 'image/avif']),
+  video: new Set(['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v', 'video/mpeg', 'video/3gpp']),
+  audio: new Set(['audio/mpeg', 'audio/mp4', 'audio/x-m4a', 'audio/aac', 'audio/wav', 'audio/x-wav', 'audio/ogg', 'audio/webm', 'audio/flac']),
+};
+
+export function kindOf(mime) {
+  for (const [kind, set] of Object.entries(ALLOWED)) if (set.has(mime)) return kind;
+  // Fall back to the top-level type: phones invent subtypes all the time.
+  const top = String(mime || '').split('/')[0];
+  if (top === 'image') return 'photo';
+  if (top === 'video') return 'video';
+  if (top === 'audio') return 'audio';
+  return null;
+}
+
+// Per-kind caps. Video is the one that can actually fill a disk, so it gets a
+// deliberate ceiling rather than the same limit as a photo.
+export const SIZE_LIMITS = {
+  photo: 15 * 1024 * 1024,
+  audio: 30 * 1024 * 1024,
+  video: 150 * 1024 * 1024,
+};
+
+const MAX_FILES = 20;
 
 const upload = multer({
   storage,
-  limits: { fileSize: 12 * 1024 * 1024 },
+  limits: { fileSize: SIZE_LIMITS.video, files: MAX_FILES },
   fileFilter: (_req, file, cb) => {
-    if (ALLOWED_IMAGE.has(file.mimetype)) return cb(null, true);
-    cb(new Error('Only image uploads are supported (jpg, png, webp, gif, heic).'));
+    if (kindOf(file.mimetype)) return cb(null, true);
+    cb(new Error(`${file.originalname} is not a photo, video or audio file.`));
   },
 });
 
-router.post('/uploads', upload.single('photo'), (req, res) => {
+const prettyBytes = (n) => {
+  if (n >= 1024 ** 3) return `${(n / 1024 ** 3).toFixed(1)}GB`;
+  if (n >= 1024 ** 2) return `${Math.round(n / 1024 ** 2)}MB`;
+  return `${Math.max(1, Math.round(n / 1024))}KB`;
+};
+
+function describe(file) {
+  return {
+    id: nanoid(12),
+    kind: kindOf(file.mimetype),
+    url: `/uploads/${file.filename}`,
+    name: file.originalname.slice(0, 200),
+    mime: file.mimetype,
+    size: file.size,
+    caption: '',
+  };
+}
+
+/**
+ * Multi-file upload. Files are stored and described, but NOT attached to a
+ * memory yet — the client holds them while the person writes, then sends the
+ * list with the memory. Anything abandoned is swept up by the orphan cleaner.
+ */
+router.post('/uploads', upload.array('files', MAX_FILES), (req, res, next) => {
+  try {
+    const files = req.files || [];
+    if (!files.length) return res.status(400).json({ error: 'No files received.' });
+
+    const accepted = [];
+    const rejected = [];
+    for (const file of files) {
+      const kind = kindOf(file.mimetype);
+      const limit = SIZE_LIMITS[kind] ?? SIZE_LIMITS.photo;
+      if (file.size > limit) {
+        // Multer's single limit is the video cap, so smaller per-kind limits
+        // are enforced here — and the oversized file is removed from disk.
+        fs.promises.unlink(file.path).catch(() => {});
+        rejected.push({ name: file.originalname, reason: `${kind} files are limited to ${prettyBytes(limit)}` });
+        continue;
+      }
+      accepted.push(describe(file));
+    }
+    res.json({ files: accepted, rejected });
+  } catch (err) {
+    next(err);
+  }
+});
+
+/** Kept so the older single-photo field in Add Memory still works. */
+router.post('/uploads/photo', upload.single('photo'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file received.' });
   res.json({ url: `/uploads/${req.file.filename}`, size: req.file.size });
+});
+
+/** How much of the disk the uploads have taken. Videos make this matter. */
+router.get('/storage', async (_req, res, next) => {
+  try {
+    const names = await fs.promises.readdir(paths.uploads).catch(() => []);
+    let bytes = 0;
+    for (const name of names) {
+      const stat = await fs.promises.stat(path.join(paths.uploads, name)).catch(() => null);
+      if (stat?.isFile()) bytes += stat.size;
+    }
+    res.json({ files: names.length, bytes, pretty: prettyBytes(bytes), limits: SIZE_LIMITS, maxFiles: MAX_FILES });
+  } catch (err) {
+    next(err);
+  }
 });
 
 /* ------------------------------------------------------------- validation */
@@ -60,6 +155,25 @@ function safeUrl(v) {
   } catch {
     return '';
   }
+}
+
+/** Validates the attachment list a client sends back with a memory. */
+function normalizeAttachments(body) {
+  const raw = Array.isArray(body.attachments) ? body.attachments : [];
+  return raw.slice(0, 40).map((a) => {
+    const url = safeUrl(a?.url);
+    const kind = ['photo', 'video', 'audio', 'link'].includes(a?.kind) ? a.kind : 'link';
+    return url ? {
+      id: str(a.id, 40) || nanoid(12),
+      kind,
+      url,
+      name: str(a.name, 200),
+      mime: str(a.mime, 100),
+      size: Number.isFinite(Number(a.size)) ? Math.max(0, Math.trunc(Number(a.size))) : 0,
+      caption: str(a.caption, 500),
+      created_at: new Date().toISOString(),
+    } : null;
+  }).filter(Boolean);
 }
 
 function normalize(body) {
@@ -93,7 +207,11 @@ function normalize(body) {
   };
 }
 
-const decorate = (m) => ({ ...m, chapter: chapterFor(m.time_sort, m.time_period) });
+const decorate = (m, attachments) => ({
+  ...m,
+  chapter: chapterFor(m.time_sort, m.time_period),
+  attachments: attachments ?? attachmentsFor(m.id),
+});
 
 /* ------------------------------------------------------------------ routes */
 
@@ -134,9 +252,10 @@ router.get('/memories', async (req, res, next) => {
       });
     }
 
+    const byMemory = attachmentMap();
     res.json({
       memories: items.map((m) => ({
-        ...decorate(m),
+        ...decorate(m, byMemory.get(m.id) ?? []),
         ...(scores?.get(m.id) ? { _search: scores.get(m.id) } : {}),
       })),
       count: items.length,
@@ -178,6 +297,8 @@ router.post('/memories', async (req, res, next) => {
       tags: JSON.stringify(data.tags),
     });
 
+    replaceAttachments(id, normalizeAttachments(req.body));
+
     // Embed in the background: saving a memory must never wait on the model.
     ensureEmbeddings({ onlyId: id }).catch((e) => console.warn('[ai] embed failed:', e.message));
 
@@ -208,6 +329,17 @@ router.put('/memories/:id', async (req, res, next) => {
       tags: JSON.stringify(data.tags),
     });
 
+    // Files dropped during an edit should leave the disk, not linger forever.
+    const before = attachmentsFor(req.params.id).map((a) => a.url);
+    const next = normalizeAttachments(req.body);
+    replaceAttachments(req.params.id, next);
+    const keep = new Set(next.map((a) => a.url));
+    for (const url of before) {
+      if (!keep.has(url) && url.startsWith('/uploads/')) {
+        fs.promises.unlink(path.join(paths.uploads, path.basename(url))).catch(() => {});
+      }
+    }
+
     ensureEmbeddings({ onlyId: req.params.id }).catch((e) => console.warn('[ai] embed failed:', e.message));
     res.json({ memory: decorate(getMemory(req.params.id)) });
   } catch (err) {
@@ -219,11 +351,14 @@ router.delete('/memories/:id', (req, res) => {
   const m = getMemory(req.params.id);
   if (!m) return res.status(404).json({ error: 'Memory not found.' });
 
-  // Clean up an uploaded photo so deleting really deletes.
-  if (m.photo_url?.startsWith('/uploads/')) {
-    const file = path.join(paths.uploads, path.basename(m.photo_url));
-    fs.promises.unlink(file).catch(() => {});
+  // Deleting has to really delete — every uploaded file this memory owned.
+  const owned = [m.photo_url, ...attachmentsFor(m.id).map((a) => a.url)];
+  for (const url of owned) {
+    if (typeof url === 'string' && url.startsWith('/uploads/')) {
+      fs.promises.unlink(path.join(paths.uploads, path.basename(url))).catch(() => {});
+    }
   }
+  db.prepare('DELETE FROM attachments WHERE memory_id = ?').run(req.params.id);
   db.prepare('DELETE FROM embeddings WHERE memory_id = ?').run(req.params.id);
   db.prepare('DELETE FROM memories WHERE id = ?').run(req.params.id);
   res.json({ deleted: req.params.id });

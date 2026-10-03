@@ -11,6 +11,25 @@ need it.
 The AI that does that reading is an **open-weight model running on your own
 server**. No API key, no third party, no account.
 
+## Two ways in
+
+Remembering something from 1998 and saving something that happened this
+afternoon are different jobs, so they get different screens.
+
+**Capture** is media-first. You just got home, your phone is full of the day —
+drop in photos, video clips and voice notes all at once, say what happened, and
+it is on the timeline. Files upload as you pick them, so pressing Save is
+instant rather than a 100MB wait. Every file can carry its own caption, and
+those captions are embedded and searchable along with the memory text.
+
+**Add Memory** is the guided flow: five short steps, one question at a time,
+for excavating something from years back where the work is remembering rather
+than uploading.
+
+Both write to the same timeline, and both accept a pasted URL as a fallback when
+uploading is awkward — an image link, a YouTube video or a Spotify track, which
+render as real players inside the card.
+
 ---
 
 ## Why open weights, specifically
@@ -205,8 +224,8 @@ server/
     llm.js            Optional OpenAI-compatible open-weight polish
   routes/             REST API
 client/
-  src/pages/          Home · Add · Timeline · Remind Me · Explore · Insights · Prompts · Settings
-  src/components/     MemoryCard with inline Spotify/YouTube embeds
+  src/pages/          Home · Capture · Add · Timeline · Remind Me · Explore · Insights · Prompts · Settings
+  src/components/     MediaPicker, MediaGallery + lightbox, MemoryCard
   src/styles/         Design tokens, light + dark
 ```
 
@@ -217,7 +236,8 @@ client/
 | `GET` | `/api/memories` | list, filter, or semantic search via `?q=` |
 | `POST` | `/api/memories` | create |
 | `PUT`/`DELETE` | `/api/memories/:id` | update / delete |
-| `POST` | `/api/uploads` | photo upload |
+| `POST` | `/api/uploads` | multi-file upload (photo / video / audio) |
+| `GET` | `/api/storage` | disk usage and per-kind size limits |
 | `GET` | `/api/facets` | filter options |
 | `GET` | `/api/prompts` | prompt bank, with answered state |
 | `GET` | `/api/reflect/reminder` | Remind Me Who I Am |

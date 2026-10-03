@@ -22,7 +22,18 @@ import {
 import {
   VALUE_ANCHORS, STORY_LENSES, FEELING_TONE, HARD_FEELINGS, HARD_CATEGORIES,
 } from './anchors.js';
-import { listMemories, getEmbeddingMap, saveEmbedding, db } from '../db.js';
+import {
+  listMemories as listMemoryRows, getEmbeddingMap, saveEmbedding, db, attachmentMap,
+} from '../db.js';
+
+/**
+ * Memories with their attachments joined on. Everything in this module reads
+ * through here so captions are part of the text we embed and search.
+ */
+function listMemories() {
+  const byMemory = attachmentMap();
+  return listMemoryRows().map((m) => ({ ...m, attachments: byMemory.get(m.id) ?? [] }));
+}
 import { chapterFor } from '../timeperiod.js';
 
 /* ------------------------------------------------------------------ anchors */

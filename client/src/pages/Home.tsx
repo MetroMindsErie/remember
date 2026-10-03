@@ -4,9 +4,10 @@ import { api } from '../lib/api';
 import { Icons } from '../lib/ui';
 
 const ACTIONS = [
-  { to: '/add',       title: 'Add Memory',          sub: 'Capture something before it fades.',      icon: Icons.plus,     grad: 'var(--grad-warm)' },
-  { to: '/timeline',  title: 'My Timeline',         sub: 'Everything you have saved, in order.',    icon: Icons.timeline, grad: 'var(--grad-calm)' },
-  { to: '/remind-me', title: 'Remind Me Who I Am',  sub: 'When you need your own evidence.',        icon: Icons.spark,    grad: 'var(--grad-dusk)' },
+  { to: '/capture',   title: 'Capture a Moment',    sub: 'Photos, video, voice — straight from today.', icon: Icons.plus, grad: 'var(--grad-warm)' },
+  { to: '/add',       title: 'Add Memory',          sub: 'Walk through something from further back.', icon: Icons.spark,  grad: 'var(--grad-calm)' },
+  { to: '/timeline',  title: 'My Timeline',         sub: 'Everything you have saved, in order.',    icon: Icons.timeline, grad: 'var(--grad-dusk)' },
+  { to: '/remind-me', title: 'Remind Me Who I Am',  sub: 'When you need your own evidence.',        icon: Icons.mirror,   grad: 'var(--grad-warm)' },
   { to: '/explore',   title: 'Explore My Story',    sub: 'Your life, read back to you.',            icon: Icons.book,     grad: 'var(--grad-warm)' },
   { to: '/insights',  title: 'Insights',            sub: 'The patterns across your memories.',      icon: Icons.chart,    grad: 'var(--grad-calm)' },
 ];
@@ -50,7 +51,7 @@ export default function Home() {
             one that came to mind while you read that sentence — and write it down.
             Everything else in Remember builds itself from what you save.
           </p>
-          <Link to="/add" className="btn btn-primary btn-block" style={{ marginTop: 4 }}>
+          <Link to="/capture" className="btn btn-primary btn-block" style={{ marginTop: 4 }}>
             Add your first memory
           </Link>
         </div>

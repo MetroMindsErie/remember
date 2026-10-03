@@ -21,7 +21,12 @@ services:
     disk:
       name: remember-data
       mountPath: /var/data
-      sizeGB: 1            # SQLite + photos + ~25MB model cache
+      # SQLite + the ~25MB model cache are tiny; this is sized for media.
+      # Capture mode accepts video, and phone clips run 50-150MB each, so 1GB
+      # fills fast. Render bills disks at $0.25/GB/month — bump this before you
+      # run out rather than after. /api/storage reports current usage, and the
+      # capture screen shows it.
+      sizeGB: 5
 
     envVars:
       - key: NODE_VERSION

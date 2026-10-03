@@ -45,7 +45,8 @@ true.
 
 **What's in it:**
 
-- **Add Memory** — a five-step guided flow, not a form. Only the title is required.
+- **Capture** — media-first. Home from a day out, drop in every photo, video clip and voice note at once, say what happened, done.
+- **Add Memory** — a five-step guided flow, for excavating something from years back.
 - **Timeline** — grouped into life chapters, searchable by meaning, filterable by category, feeling, person, tag and place.
 - **Remind Me Who I Am** — the reflection above, plus the receipts it was built from.
 - **Explore My Story** — seven lenses: My Life Story, My Strengths, People Who Matter Most, Places That Shaped Me, Challenges I Overcame, What My Memories Say About Me, My Current Chapter.
@@ -126,6 +127,26 @@ strictly a polish pass. With nothing configured, the composer's output ships
 as-is, and if the endpoint is slow or down the app falls back silently. **The
 app is fully functional with no LLM at all**, which was a hard requirement:
 the user I built this for should never press that button and get an error.
+
+### Two input modes, because they are different jobs
+
+Saving something from 1998 and saving this afternoon are not the same task. The
+guided five-step flow is right when the work is *remembering* — one question at
+a time, only the title required. It is exactly wrong when you just got home and
+your phone is full of the day.
+
+So **Capture** is media-first: photos, video and audio in one drop, each with
+its own caption, everything else optional and below the fold. Files upload as
+you pick them rather than on save, so finishing is instant instead of a 100MB
+wait — the tradeoff is files on disk for abandoned captures, which the server
+sweeps on boot (unreferenced and older than a day, so an in-progress capture is
+never touched).
+
+Captions turned out to matter more than I expected. They are often the most
+specific words in the whole memory — *"Milo refused to get on the big coaster,
+then rode it four times"* — so they get embedded along with the memory text.
+Searching *"the day my kid was scared of a rollercoaster"* finds that day, on
+the strength of a photo caption.
 
 ### Two things that were harder than the AI
 

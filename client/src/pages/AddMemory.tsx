@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import type { Facets } from '../lib/types';
 import { CATEGORY_EMOJI, ErrorNote, Icons, Toast, feelingStyle } from '../lib/ui';
+import { MediaPicker } from '../components/MediaPicker';
+import type { Attachment } from '../lib/types';
 
 /**
  * Add Memory is deliberately a *guided* flow rather than one long form. Five
@@ -40,11 +42,10 @@ export default function AddMemory() {
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [facets, setFacets] = useState<Facets | null>(null);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
   const titleRef = useRef<HTMLInputElement>(null);
 
   // Arriving from a prompt pre-fills the question, category and feeling so the
@@ -77,22 +78,6 @@ export default function AddMemory() {
   const isLast = step === STEPS.length - 1;
   const progress = useMemo(() => ((step + 1) / STEPS.length) * 100, [step]);
 
-  async function handlePhoto(file: File) {
-    setUploading(true);
-    setError(null);
-    try {
-      const { url } = await api.uploadPhoto(file);
-      set('photo_url', url);
-      setToast('Photo added');
-    } catch (e) {
-      setError(
-        `${(e as Error).message} You can paste an image URL instead — that always works.`
-      );
-    } finally {
-      setUploading(false);
-    }
-  }
-
   async function save() {
     if (!canSave) { setStep(0); setError('A memory needs a title to find it again later.'); return; }
     setSaving(true);
@@ -102,6 +87,7 @@ export default function AddMemory() {
         ...draft,
         people: draft.people.split(',').map((s) => s.trim()).filter(Boolean),
         tags: draft.tags.split(',').map((s) => s.trim().replace(/^#/, '')).filter(Boolean),
+        attachments,
       });
       nav('/timeline', { state: { highlight: memory.id, saved: true } });
     } catch (e) {
@@ -360,39 +346,11 @@ export default function AddMemory() {
       {step === 4 && (
         <div className="stack-l">
           <div className="field">
-            <label>Photo</label>
-            <span className="help">Optional. Stored on your own server, never uploaded anywhere else.</span>
-            {draft.photo_url ? (
-              <div className="stack-s">
-                <img
-                  src={draft.photo_url} alt="The photo you attached"
-                  style={{ width: '100%', borderRadius: 14, maxHeight: 280, objectFit: 'cover' }}
-                />
-                <button className="btn btn-sm btn-ghost" onClick={() => set('photo_url', '')}>
-                  Remove photo
-                </button>
-              </div>
-            ) : (
-              <div className="stack-s">
-                <input
-                  ref={fileRef} type="file" accept="image/*" className="sr-only"
-                  id="photo-file"
-                  onChange={(e) => { const f = e.target.files?.[0]; if (f) handlePhoto(f); }}
-                />
-                <button
-                  className="btn btn-ghost btn-block" disabled={uploading}
-                  onClick={() => fileRef.current?.click()}
-                >
-                  {uploading ? <><span className="spinner" /> Uploading…</> : 'Choose a photo'}
-                </button>
-                <input
-                  className="input" value={draft.photo_url}
-                  onChange={(e) => set('photo_url', e.target.value)}
-                  placeholder="…or paste an image URL"
-                  aria-label="Image URL"
-                />
-              </div>
-            )}
+            <label>Photos, video, audio</label>
+            <span className="help">
+              Optional, and you can add several. Stored on your own server, never uploaded anywhere else.
+            </span>
+            <MediaPicker items={attachments} onChange={setAttachments} compact />
           </div>
 
           <div className="field">

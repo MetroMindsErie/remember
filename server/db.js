@@ -42,6 +42,25 @@ db.exec(`
     value TEXT NOT NULL
   );
 
+  -- One memory holds many files. A day out is photos AND a video AND the song
+  -- that was playing, not a single photo_url. The original single-URL columns
+  -- on the memories table are kept so existing entries keep working; anything
+  -- added through capture lands here.
+  CREATE TABLE IF NOT EXISTS attachments (
+    id         TEXT PRIMARY KEY,
+    memory_id  TEXT NOT NULL REFERENCES memories(id) ON DELETE CASCADE,
+    kind       TEXT NOT NULL,            -- photo | video | audio | link
+    url        TEXT NOT NULL,
+    name       TEXT NOT NULL DEFAULT '',
+    mime       TEXT NOT NULL DEFAULT '',
+    size       INTEGER NOT NULL DEFAULT 0,
+    caption    TEXT NOT NULL DEFAULT '',
+    position   INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_attachments_memory ON attachments(memory_id, position);
+
   CREATE INDEX IF NOT EXISTS idx_memories_time_sort ON memories(time_sort);
   CREATE INDEX IF NOT EXISTS idx_memories_category  ON memories(category);
   CREATE INDEX IF NOT EXISTS idx_memories_feeling   ON memories(feeling);
@@ -133,4 +152,47 @@ export function getBirthYear() {
   const raw = getSetting('birth_year');
   const n = Number(raw);
   return Number.isInteger(n) && n > 1900 && n <= new Date().getFullYear() ? n : null;
+}
+
+/* ------------------------------------------------------------ attachments */
+
+export function attachmentsFor(memoryId) {
+  return db
+    .prepare('SELECT * FROM attachments WHERE memory_id = ? ORDER BY position, created_at')
+    .all(memoryId);
+}
+
+/** All attachments, grouped by memory — one query instead of N. */
+export function attachmentMap() {
+  const map = new Map();
+  for (const a of db.prepare('SELECT * FROM attachments ORDER BY position, created_at').all()) {
+    if (!map.has(a.memory_id)) map.set(a.memory_id, []);
+    map.get(a.memory_id).push(a);
+  }
+  return map;
+}
+
+export function replaceAttachments(memoryId, items) {
+  const del = db.prepare('DELETE FROM attachments WHERE memory_id = ?');
+  const ins = db.prepare(
+    `INSERT INTO attachments (id, memory_id, kind, url, name, mime, size, caption, position, created_at)
+     VALUES (@id, @memory_id, @kind, @url, @name, @mime, @size, @caption, @position, @created_at)`
+  );
+  db.transaction(() => {
+    del.run(memoryId);
+    items.forEach((a, i) => ins.run({ ...a, memory_id: memoryId, position: i }));
+  })();
+}
+
+/** Every uploaded file path the database still refers to. */
+export function referencedFiles() {
+  const files = new Set();
+  const add = (url) => {
+    if (typeof url === 'string' && url.startsWith('/uploads/')) files.add(url.slice('/uploads/'.length));
+  };
+  for (const r of db.prepare('SELECT url FROM attachments').all()) add(r.url);
+  for (const r of db.prepare('SELECT photo_url, video_url, music_url, attachment_url FROM memories').all()) {
+    add(r.photo_url); add(r.video_url); add(r.music_url); add(r.attachment_url);
+  }
+  return files;
 }

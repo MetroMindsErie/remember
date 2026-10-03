@@ -106,6 +106,9 @@ export function memorySourceText(memory) {
     memory.category,
     memory.feeling,
     (memory.tags || []).join(', '),
+    // Captions people write under a photo are often the most specific words in
+    // the whole memory, so they belong in the vector too.
+    (memory.attachments || []).map((a) => a.caption).filter(Boolean).join('\n'),
   ]
     .filter(Boolean)
     .join('\n');
