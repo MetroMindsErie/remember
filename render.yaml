@@ -13,6 +13,10 @@ services:
     runtime: node
     plan: starter          # 512MB RAM — enough for int8 MiniLM. Free tier has no disks.
     region: oregon
+    # Render sets NODE_ENV=production, which makes npm skip devDependencies.
+    # vite and typescript are devDependencies of the client, so the build
+    # script passes --include=dev explicitly. Without it the build fails with
+    # "tsc: command not found".
     buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
