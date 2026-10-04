@@ -19,7 +19,7 @@ const app = express();
 app.disable('x-powered-by');
 app.use(express.json({ limit: '2mb' }));
 
-// Uploaded photos. Long cache — filenames are content-unique.
+// Uploaded photos. Long cache, filenames are content-unique.
 app.use(
   '/uploads',
   express.static(paths.uploads, {
@@ -59,7 +59,7 @@ app.use((err, _req, res, _next) => {
 /**
  * Capture uploads files as they are picked, before the memory is saved. If
  * somebody backs out halfway, those files are on disk with nothing pointing at
- * them. Sweep anything unreferenced and older than a day — the age check means
+ * them. Sweep anything unreferenced and older than a day, the age check means
  * an in-progress capture is never touched.
  */
 async function sweepOrphanUploads() {
@@ -89,7 +89,7 @@ async function sweepOrphanUploads() {
 const port = Number(process.env.PORT || 3000);
 app.listen(port, () => {
   const llm = llmStatus();
-  console.log(`\n  Remember — reconnect with who you are.`);
+  console.log(`\n  Remember, reconnect with who you are.`);
   console.log(`  http://localhost:${port}`);
   console.log(`  data: ${paths.data}`);
   console.log(

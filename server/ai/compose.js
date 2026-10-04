@@ -35,7 +35,7 @@ export function composeReminder(signals) {
     return {
       headline: 'Your story starts with one memory.',
       paragraphs: [
-        'There is nothing saved here yet, so there is nothing for me to reflect back to you. That is not a failure — it just means the first page is still blank.',
+        'There is nothing saved here yet, so there is nothing for me to reflect back to you. That is not a failure. It just means the first page is still blank.',
         'Add one memory. Any memory. The one that came to mind while you were reading this sentence. Remember builds everything else from there.',
       ],
       statements: ['You are allowed to start small.'],
@@ -75,7 +75,7 @@ export function composeReminder(signals) {
     const repeat = people.filter((p) => p.count > 1);
     let p = '';
     if (repeat.length) {
-      p += `${list(repeat.map((r) => r.label))} ${repeat.length === 1 ? 'shows' : 'show'} up in your memories more than once — ${anchor} in ${plural(people[0].count, 'memory', 'memories')}. `;
+      p += `${list(repeat.map((r) => r.label))} ${repeat.length === 1 ? 'shows' : 'show'} up in your memories more than once, ${anchor} in ${plural(people[0].count, 'memory', 'memories')}. `;
       p += 'People do not recur in a story by accident. ';
     } else {
       p += `${list(names)} ${names.length === 1 ? 'is' : 'are'} in here with you. `;
@@ -121,9 +121,9 @@ export function composeReminder(signals) {
     let p = `You also wrote down ${plural(challenges.length, 'hard thing', 'hard things')}` +
       `${challenges.length > Math.min(2, titles.length) ? ', including' : ':'} ${list(titles, { max: 2 })}. `;
     p += pick([
-      'You wrote them in the past tense. That detail matters more than anything else on this page — it means you are on the other side of them.',
+      'You wrote them in the past tense. That detail matters more than anything else on this page. It means you are on the other side of them.',
       'Every one of those was once the thing you were in the middle of. You are not in the middle of them now.',
-      'Those were survived. Not avoided, not undone — survived, by you, with whatever you had at the time.',
+      'Those were survived. Not avoided, not undone, survived, by you, with whatever you had at the time.',
     ], seed + 4);
     paragraphs.push(p);
   }
@@ -144,7 +144,7 @@ export function composeReminder(signals) {
   const closing = [];
   if (arc.hard > 0 && arc.positive > 0) {
     closing.push(
-      `Your memories hold both — ${plural(arc.positive, 'good one', 'good ones')} and ${plural(arc.hard, 'heavy one', 'heavy ones')}. ` +
+      `Your memories hold both, ${plural(arc.positive, 'good one', 'good ones')} and ${plural(arc.hard, 'heavy one', 'heavy ones')}. ` +
       'That is not a contradiction to resolve. That is just what a real life looks like from the inside.'
     );
   }
@@ -234,7 +234,7 @@ export function composeStory(lens, ranked, signals) {
       paragraphs.push(
         top.length
           ? `${plural(top.length, 'person', 'people')} appear in the memories you have saved. ${list(top.map((p) => `${p.label} (${p.count})`), { max: 6 })}.`
-          : 'You have not named anyone yet — try adding who was involved to a memory or two.'
+          : 'You have not named anyone yet, try adding who was involved to a memory or two.'
       );
       featured = memories.filter((m) =>
         (m.people || []).some((p) => top.some((t) => t.label.toLowerCase() === p.toLowerCase()))
@@ -279,7 +279,7 @@ export function composeStory(lens, ranked, signals) {
       // list makes the whole section read as a template, which is exactly the
       // impression this app cannot afford to give.
       const THEME_LINES = [
-        (v) => `It is the strongest signal in everything you have written — present in ${plural(v.memories, 'memory', 'memories')}, across different parts of your life.`,
+        (v) => `It is the strongest signal in everything you have written, present in ${plural(v.memories, 'memory', 'memories')}, across different parts of your life.`,
         (v) => `${plural(v.memories, 'memory', 'memories')} lean this way. Not one defining event, but a habit of what you reach for.`,
         (v) => `This turns up in ${plural(v.memories, 'memory', 'memories')} you wrote about completely different things, which is usually how a real value shows itself.`,
         (v) => `Quieter than the others, but it is there in ${plural(v.memories, 'memory', 'memories')} and it keeps coming back.`,
@@ -295,7 +295,7 @@ export function composeStory(lens, ranked, signals) {
     }
 
     case 'recent': {
-      // Recency is a fact about time, not about similarity — so this ranks the
+      // Recency is a fact about time, not about similarity, so this ranks the
       // whole timeline by when things happened. Ranking the lens's top matches
       // instead let a 2012 road trip show up as a "recent" memory.
       const undated = (m) => m.time_sort == null;
@@ -306,7 +306,7 @@ export function composeStory(lens, ranked, signals) {
       if (!recent.length) {
         return {
           title: lens.label,
-          paragraphs: ['None of your memories have a time period yet, so there is no "recent" to read. Add a when — even something loose like "last year" — and this fills in.'],
+          paragraphs: ['None of your memories have a time period yet, so there is no "recent" to read. Add a when, even something loose like "last year". And this fills in.'],
           highlights: [], empty: false,
         };
       }
@@ -319,7 +319,7 @@ export function composeStory(lens, ranked, signals) {
         `Lately you have been writing in terms of ${list(feels, { max: 3 })}. ` +
         pick([
           'Chapters are allowed to feel unfinished while you are still in them.',
-          'You cannot see the shape of this one yet. That is normal — you could not see the shape of the others either.',
+          'You cannot see the shape of this one yet. That is normal, you could not see the shape of the others either.',
           'This is the part of the story you are still writing.',
         ], seed)
       );

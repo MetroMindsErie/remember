@@ -3,6 +3,7 @@ import type { Memory } from '../lib/types';
 import { CategoryBadge, FeelingBadge, Icons, feelingStyle } from '../lib/ui';
 import { MediaGallery } from './MediaGallery';
 import { embedUrl, hostOf } from '../lib/embed';
+import { User, MapPin, Sparkle } from '@phosphor-icons/react';
 
 function MediaLink({ url, icon, label }: { url: string; icon: JSX.Element; label: string }) {
   return (
@@ -38,18 +39,18 @@ export function MemoryCard({
   const hasMedia = (memory.attachments?.length ?? 0) > 0;
 
   return (
-    <article className="card card-lg stack rise" style={{ gap: 12, overflow: 'hidden' }}>
+    <article className="card card-lg card-raised stack rise" style={{ gap: 13, overflow: 'hidden' }}>
       {/* a thin emotional stripe, so the feeling reads before the words do */}
+      {/* A hairline in the feeling's hue. Reads the emotional register of the
+          card before a single word of it. */}
       <div
         aria-hidden="true"
-        style={{
-          height: 4, margin: '-20px -20px 2px', background: s.fg, opacity: .85,
-        }}
+        style={{ height: 3, margin: '-22px -22px 4px', background: s.fg, opacity: .9 }}
       />
 
       <div className="spread" style={{ alignItems: 'flex-start' }}>
         <div className="grow stack-s">
-          <h3 className="serif" style={{ fontSize: 19.5 }}>{memory.title}</h3>
+          <h3 className="display" style={{ fontSize: 19, letterSpacing: '-.028em' }}>{memory.title}</h3>
           {memory.time_period && (
             <div className="row small muted" style={{ gap: 6 }}>
               <span>{memory.time_period}</span>
@@ -60,8 +61,12 @@ export function MemoryCard({
           )}
         </div>
         {memory._search && memory._search.matchedOn === 'meaning' && (
-          <span className="badge badge-time" title="Found by meaning, not by matching words">
-            ✦ by meaning
+          <span
+            className="badge"
+            style={{ background: 'var(--accent-soft)', color: 'var(--accent-ink)' }}
+            title="Found by meaning, not by matching words"
+          >
+            <Sparkle size={12} weight="fill" /> by meaning
           </span>
         )}
       </div>
@@ -85,7 +90,7 @@ export function MemoryCard({
           alt={`Photo from the memory “${memory.title}”`}
           loading="lazy"
           style={{
-            width: '100%', borderRadius: 14, maxHeight: 340,
+            width: '100%', borderRadius: 'var(--r-input)', maxHeight: 340,
             objectFit: 'cover', background: 'var(--paper-2)',
           }}
           onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
@@ -96,12 +101,12 @@ export function MemoryCard({
         <div className="row-wrap small">
           {memory.people.map((p) => (
             <button key={p} className="chip" onClick={() => onFilter?.('person', p)}>
-              <span aria-hidden="true">🧍</span> {p}
+              <User size={13} /> {p}
             </button>
           ))}
           {memory.place && (
             <button className="chip" onClick={() => onFilter?.('place', memory.place)}>
-              <span aria-hidden="true">📍</span> {memory.place}
+              <MapPin size={13} /> {memory.place}
             </button>
           )}
         </div>
@@ -126,7 +131,7 @@ export function MemoryCard({
             <div
               className="stack-s"
               style={{
-                padding: 14, borderRadius: 14,
+                padding: 14, borderRadius: 'var(--r-input)',
                 background: s.bg, borderLeft: `3px solid ${s.fg}`,
               }}
             >
@@ -142,7 +147,7 @@ export function MemoryCard({
       {open && (music || video) && (
         <div className="stack-s">
           {video && (
-            <div style={{ position: 'relative', paddingTop: '56.25%', borderRadius: 14, overflow: 'hidden' }}>
+            <div style={{ position: 'relative', paddingTop: '56.25%', borderRadius: 'var(--r-input)', overflow: 'hidden' }}>
               <iframe
                 src={video.src}
                 title={`Video for ${memory.title}`}
@@ -159,7 +164,7 @@ export function MemoryCard({
               title={`Music for ${memory.title}`}
               allow="encrypted-media; clipboard-write"
               loading="lazy"
-              style={{ width: '100%', height: music.kind === 'audio' ? 152 : 200, border: 0, borderRadius: 14 }}
+              style={{ width: '100%', height: music.kind === 'audio' ? 152 : 200, border: 0, borderRadius: 'var(--r-input)' }}
             />
           )}
         </div>
@@ -202,7 +207,7 @@ export function MemoryCard({
               <button className="btn btn-sm btn-ghost" onClick={() => setConfirming(false)}>Keep</button>
               <button
                 className="btn btn-sm"
-                style={{ background: 'var(--rose)', color: '#fff', borderColor: 'transparent' }}
+                style={{ background: 'var(--accent)', color: '#fff', borderColor: 'transparent' }}
                 onClick={() => onDelete(memory.id)}
               >
                 Delete for good

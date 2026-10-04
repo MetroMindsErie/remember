@@ -83,7 +83,7 @@ function describe(file) {
 
 /**
  * Multi-file upload. Files are stored and described, but NOT attached to a
- * memory yet — the client holds them while the person writes, then sends the
+ * memory yet, the client holds them while the person writes, then sends the
  * list with the memory. Anything abandoned is swept up by the orphan cleaner.
  */
 router.post('/uploads', upload.array('files', MAX_FILES), (req, res, next) => {
@@ -98,7 +98,7 @@ router.post('/uploads', upload.array('files', MAX_FILES), (req, res, next) => {
       const limit = SIZE_LIMITS[kind] ?? SIZE_LIMITS.photo;
       if (file.size > limit) {
         // Multer's single limit is the video cap, so smaller per-kind limits
-        // are enforced here — and the oversized file is removed from disk.
+        // are enforced here. And the oversized file is removed from disk.
         fs.promises.unlink(file.path).catch(() => {});
         rejected.push({ name: file.originalname, reason: `${kind} files are limited to ${prettyBytes(limit)}` });
         continue;
@@ -351,7 +351,7 @@ router.delete('/memories/:id', (req, res) => {
   const m = getMemory(req.params.id);
   if (!m) return res.status(404).json({ error: 'Memory not found.' });
 
-  // Deleting has to really delete — every uploaded file this memory owned.
+  // Deleting has to really delete, every uploaded file this memory owned.
   const owned = [m.photo_url, ...attachmentsFor(m.id).map((a) => a.url)];
   for (const url of owned) {
     if (typeof url === 'string' && url.startsWith('/uploads/')) {

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { api } from '../lib/api';
 import type { Attachment } from '../lib/types';
 import { Icons } from '../lib/ui';
+import { Camera, FilmStrip, MusicNote, LinkSimple, Warning } from '@phosphor-icons/react';
 
 /**
  * Picks photos, videos and audio, uploads them immediately, and lets each one
@@ -56,7 +57,7 @@ export function MediaPicker({
   const remove = (id: string) => onChange(items.filter((a) => a.id !== id));
 
   /**
-   * Link fallback. Uploading fails for all sorts of boring reasons — a file
+   * Link fallback. Uploading fails for all sorts of boring reasons. A file
    * that is too big, a flaky connection, a photo that only exists in a shared
    * album. Pasting a URL always works, so it is never a dead end.
    */
@@ -122,8 +123,8 @@ export function MediaPicker({
         className="stack-s"
         style={{
           border: `2px dashed ${dragging ? 'var(--accent)' : 'var(--line)'}`,
-          background: dragging ? 'var(--accent-soft)' : 'var(--card-2)',
-          borderRadius: 'var(--radius)',
+          background: dragging ? 'var(--accent-soft)' : 'var(--surface-2)',
+          borderRadius: 'var(--r-surface)',
           padding: compact ? '16px 14px' : '24px 16px',
           textAlign: 'center',
           alignItems: 'center',
@@ -140,10 +141,10 @@ export function MediaPicker({
           </div>
         ) : (
           <>
-            <div style={{ fontSize: compact ? 24 : 30 }} aria-hidden="true">📷</div>
+            <Camera size={compact ? 24 : 30} weight="light" className="muted-2" aria-hidden="true" />
             {!compact && (
               <p className="small muted" style={{ maxWidth: 300 }}>
-                Photos, videos, voice notes — whatever you have. Add them all at once.
+                Photos, videos, voice notes, whatever you have. Add them all at once.
               </p>
             )}
             <div className="row-wrap" style={{ justifyContent: 'center', marginTop: 2 }}>
@@ -159,7 +160,7 @@ export function MediaPicker({
             </div>
 
             {showLink && (
-              <div className="row fade-in" style={{ gap: 6, width: '100%', marginTop: 8 }}>
+              <div className="row fade" style={{ gap: 6, width: '100%', marginTop: 8 }}>
                 <input
                   className="input grow"
                   style={{ fontSize: 14, padding: '9px 11px' }}
@@ -178,7 +179,7 @@ export function MediaPicker({
 
       {error && (
         <div className="notice notice-error" role="alert">
-          <span aria-hidden="true">⚠</span>
+          <Warning size={16} weight="fill" />
           <span className="grow">{error}</span>
         </div>
       )}
@@ -224,7 +225,7 @@ export function MediaPicker({
                   <button
                     type="button" className="btn-plain" aria-label={`Remove ${a.name}`}
                     onClick={() => remove(a.id)}
-                    style={{ padding: 6, color: 'var(--rose)' }}
+                    style={{ padding: 6, color: 'var(--accent)' }}
                   >
                     <span style={{ width: 15, height: 15, display: 'block' }}><Icons.trash /></span>
                   </button>
@@ -242,7 +243,7 @@ export function MediaPicker({
             </div>
           ))}
           <p className="tiny muted-2">
-            Captions are searchable — they get read by the same model that reads your memories.
+            Captions are searchable, they get read by the same model that reads your memories.
           </p>
         </div>
       )}
@@ -252,7 +253,7 @@ export function MediaPicker({
 
 function MediaThumb({ attachment }: { attachment: Attachment }) {
   const box = {
-    width: 54, height: 54, flexShrink: 0, borderRadius: 10,
+    width: 54, height: 54, flexShrink: 0, borderRadius: 'var(--r-input)',
     background: 'var(--paper-2)', display: 'grid', placeItems: 'center',
     overflow: 'hidden', fontSize: 22,
   } as const;
@@ -269,8 +270,10 @@ function MediaThumb({ attachment }: { attachment: Attachment }) {
     );
   }
   return (
-    <span style={box} aria-hidden="true">
-      {attachment.kind === 'video' ? '🎬' : attachment.kind === 'audio' ? '🎵' : '🔗'}
+    <span style={box} aria-hidden="true" className="muted-2">
+      {attachment.kind === 'video' ? <FilmStrip size={20} />
+        : attachment.kind === 'audio' ? <MusicNote size={20} />
+        : <LinkSimple size={20} />}
     </span>
   );
 }

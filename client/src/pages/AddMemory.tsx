@@ -2,14 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import type { Facets } from '../lib/types';
-import { CATEGORY_EMOJI, ErrorNote, Icons, Toast, feelingStyle } from '../lib/ui';
+import { ErrorNote, Icons, Toast, feelingStyle, categoryIcon} from '../lib/ui';
 import { MediaPicker } from '../components/MediaPicker';
 import type { Attachment } from '../lib/types';
 
 /**
  * Add Memory is deliberately a *guided* flow rather than one long form. Five
- * short steps, one question at a time, with only the title actually required —
- * so a half-remembered thing can still be saved instead of abandoned.
+ * short steps, one question at a time, with only the title actually required, * so a half-remembered thing can still be saved instead of abandoned.
  */
 
 type Draft = {
@@ -99,13 +98,13 @@ export default function AddMemory() {
   const fs = feelingStyle(draft.feeling);
 
   return (
-    <div className="stack-l fade-in">
+    <div className="stack-l fade">
       <div className="page-head stack-s" style={{ paddingBottom: 10 }}>
         <button className="back-link" onClick={() => (step === 0 ? nav(-1) : setStep((s) => s - 1))}>
           <span style={{ width: 15, height: 15, display: 'block' }}><Icons.back /></span>
           {step === 0 ? 'Back' : STEPS[step - 1].label}
         </button>
-        <h1 className="serif">{STEPS[step].label}</h1>
+        <h1 className="display">{STEPS[step].label}</h1>
         {draft.prompt && (
           <p className="small" style={{ color: 'var(--accent)', fontStyle: 'italic' }}>
             “{draft.prompt}”
@@ -152,7 +151,7 @@ export default function AddMemory() {
             <textarea
               id="memory_text" className="textarea" value={draft.memory_text}
               onChange={(e) => set('memory_text', e.target.value)}
-              placeholder="Write it like you are telling someone. The small details are the ones worth keeping — what you could smell, who said what, the radio being on."
+              placeholder="Write it like you are telling someone. The small details are the ones worth keeping, what you could smell, who said what, the radio being on."
               rows={7}
             />
           </div>
@@ -170,7 +169,7 @@ export default function AddMemory() {
             </datalist>
             <span className="help">
               However you remember it. “High school”, “2018”, “age 16” and “Christmas 2020”
-              all work — Remember figures out where it goes on your timeline.
+              all work, Remember figures out where it goes on your timeline.
             </span>
             <div className="row-wrap" style={{ marginTop: 2 }}>
               {TIME_EXAMPLES.map((t) => (
@@ -242,7 +241,7 @@ export default function AddMemory() {
                   aria-pressed={draft.category === c}
                   onClick={() => set('category', c)}
                 >
-                  <span aria-hidden="true">{CATEGORY_EMOJI[c] ?? '✨'}</span> {c}
+                  {(() => { const I = categoryIcon(c); return <I size={14} />; })()} {c}
                 </button>
               ))}
             </div>
@@ -268,7 +267,7 @@ export default function AddMemory() {
                     onClick={() => set('feeling', f)}
                     style={on ? { background: s.fg, borderColor: s.fg, color: '#fff' } : { background: s.bg, borderColor: 'transparent', color: s.fg }}
                   >
-                    <span aria-hidden="true">{s.emoji}</span> {f}
+                    <s.Icon size={14} weight="fill" /> {f}
                   </button>
                 );
               })}
@@ -279,8 +278,8 @@ export default function AddMemory() {
             className="card card-lg center stack"
             style={{ background: fs.bg, border: 0, alignItems: 'center' }}
           >
-            <div style={{ fontSize: 36 }} aria-hidden="true">{fs.emoji}</div>
-            <p className="serif" style={{ fontSize: 18, color: fs.fg }}>
+            <fs.Icon size={34} weight="fill" aria-hidden="true" />
+            <p className="display" style={{ fontSize: 18, color: fs.fg }}>
               {draft.title ? `“${draft.title}”` : 'This memory'} feels {draft.feeling.toLowerCase()}.
             </p>
           </div>
@@ -318,14 +317,14 @@ export default function AddMemory() {
         <div className="stack-l">
           <div
             className="card card-lg"
-            style={{ background: 'var(--grad-dusk)', border: 0, color: '#2c2040' }}
+            style={{ background: 'var(--ink)', border: 0, color: '#2c2040' }}
           >
-            <p className="serif" style={{ fontSize: 19 }}>
+            <p className="display" style={{ fontSize: 19 }}>
               This is the part that matters most.
             </p>
             <p className="small" style={{ opacity: .85, marginTop: 6 }}>
               Remember uses what you write here more than anything else to work out
-              what you value — and it is what gets read back to you when you ask to
+              what you value. And it is what gets read back to you when you ask to
               be reminded who you are.
             </p>
           </div>

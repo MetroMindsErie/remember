@@ -34,7 +34,7 @@ router.get('/reflect/reminder', async (_req, res, next) => {
   }
 });
 
-/** Explore My Story — the lens menu. */
+/** Explore My Story, the lens menu. */
 router.get('/reflect/lenses', (_req, res) => {
   res.json({
     lenses: STORY_LENSES.map(({ id, label, blurb, icon }) => ({ id, label, blurb, icon })),

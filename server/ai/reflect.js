@@ -4,11 +4,11 @@
  * Everything in here is derived from the user's own memories plus the local
  * embedding model. There are three layers:
  *
- *   1. Signals   — structured facts: people, places, feelings, chapters, and
+ *   1. Signals, structured facts: people, places, feelings, chapters, and
  *                  value scores from the anchor prototypes.
- *   2. Retrieval — semantic search over memory vectors, so "what did I survive"
+ *   2. Retrieval, semantic search over memory vectors, so "what did I survive"
  *                  finds the right memories without sharing a single keyword.
- *   3. Prose     — a deterministic composer turns signals into warm, grounded
+ *   3. Prose. A deterministic composer turns signals into warm, grounded
  *                  text. If an open-weight LLM is configured it rewrites that
  *                  text; if not, the composer's output ships as-is.
  *
@@ -166,8 +166,8 @@ export async function buildSignals() {
   };
 
   // "Hard" has to mean one thing across the whole app. A memory counts as hard
-  // if its category or its feeling says so — the same test the challenges list
-  // uses — otherwise the reminder can say "2 hard things" and "1 heavy one" in
+  // if its category or its feeling says so, the same test the challenges list
+  // uses, otherwise the reminder can say "2 hard things" and "1 heavy one" in
   // consecutive paragraphs, which instantly destroys trust in the reflection.
   const isHard = (m) => HARD_CATEGORIES.includes(m.category) || HARD_FEELINGS.includes(m.feeling);
   let positive = 0, hard = 0, neutral = 0;
@@ -184,7 +184,7 @@ export async function buildSignals() {
   const challenges = memories.filter(isHard).slice(0, 12);
 
   // Chronological span. `chapters` is ranked by frequency, so it cannot be used
-  // to say "from X to Y" — we need the actual earliest and latest dated memory.
+  // to say "from X to Y", we need the actual earliest and latest dated memory.
   const dated = memories.filter((m) => m.time_sort != null).sort((a, b) => a.time_sort - b.time_sort);
   const span = dated.length
     ? {
@@ -210,7 +210,7 @@ export async function buildSignals() {
     signals.ai = { ...embeddingStatus(), vectors: usable.length };
 
     if (usable.length) {
-      // Per-memory value scores, averaged — more robust than scoring the
+      // Per-memory value scores, averaged, more robust than scoring the
       // single centroid, which washes out a person with varied memories.
       const accum = new Map(protos.map((p) => [p.id, { label: p.label, total: 0, top: 0 }]));
       for (const v of usable) {
@@ -230,7 +230,7 @@ export async function buildSignals() {
         }))
         // A value must both score well on average AND actually lead in at least
         // one memory. Average alone let themes through that were never the top
-        // read of anything, which surfaced as "Loyalty — 0 memories".
+        // read of anything, which surfaced as "Loyalty, 0 memories".
         .filter((v) => v.strength > 0.15 && v.memories > 0)
         .sort((a, b) => b.strength - a.strength)
         .slice(0, 8);
@@ -265,7 +265,7 @@ const SEARCH_STOPWORDS = new Set([
 /**
  * Semantic search.
  *
- * The embedding is the primary signal — that is the whole reason this app runs
+ * The embedding is the primary signal, that is the whole reason this app runs
  * a model at all. "What did I survive" has to find a memory about a hospital
  * room without sharing a single word with it. Keyword matching is kept only as
  * a *boost*, for the cases vectors are bad at: proper nouns the model has never

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import type { Prompt } from '../lib/types';
-import { CATEGORY_EMOJI, ErrorNote, Icons, Spinner, feelingStyle } from '../lib/ui';
+import { ErrorNote, Icons, Spinner, feelingStyle, categoryIcon} from '../lib/ui';
+import { Confetti } from '@phosphor-icons/react';
 
 export default function Prompts() {
   const nav = useNavigate();
@@ -39,15 +40,14 @@ export default function Prompts() {
   };
 
   return (
-    <div className="stack-l fade-in">
+    <div className="stack-l fade">
       <div className="page-head stack-s" style={{ paddingBottom: 8 }}>
         <button className="back-link" onClick={() => nav(-1)}>
           <span style={{ width: 15, height: 15, display: 'block' }}><Icons.back /></span> Back
         </button>
-        <h1 className="serif">Questions for you</h1>
+        <h1 className="display">Questions for you</h1>
         <p className="sub">
-          Pick one and answer it as a memory. Easier than staring at a blank page —
-          and you have answered {answeredCount} of {prompts.length} so far.
+          Pick one and answer it as a memory. Easier than staring at a blank page. And you have answered {answeredCount} of {prompts.length} so far.
         </p>
       </div>
 
@@ -85,7 +85,7 @@ export default function Prompts() {
                   style={{ animationDelay: `${Math.min(i, 8) * 40}ms`, opacity: p.answered ? .72 : 1 }}
                 >
                   <div className="spread" style={{ alignItems: 'flex-start' }}>
-                    <h2 className="serif grow" style={{ fontSize: 18.5 }}>{p.text}</h2>
+                    <h2 className="display grow" style={{ fontSize: 18.5 }}>{p.text}</h2>
                     {p.answered && (
                       <span className="badge" style={{ background: fs.bg, color: fs.fg }}>
                         <span style={{ width: 11, height: 11, display: 'block' }}><Icons.check /></span> Answered
@@ -94,8 +94,8 @@ export default function Prompts() {
                   </div>
                   <p className="small muted">{p.hint}</p>
                   <div className="spread">
-                    <span className="badge badge-cat">
-                      <span aria-hidden="true">{CATEGORY_EMOJI[p.category] ?? '✨'}</span> {p.category}
+                    <span className="badge">
+                      {(() => { const I = categoryIcon(p.category); return <I size={14} />; })()} {p.category}
                     </span>
                     <button className="btn btn-sm btn-ghost" onClick={() => answer(p)}>
                       {p.answered ? 'Answer again' : 'Answer this'} →
@@ -108,8 +108,8 @@ export default function Prompts() {
 
           {shown.length === 0 && (
             <div className="card card-lg center stack" style={{ alignItems: 'center' }}>
-              <p style={{ fontSize: 32 }} aria-hidden="true">🎉</p>
-              <p className="serif" style={{ fontSize: 18 }}>You have answered all of these.</p>
+              <Confetti size={30} weight="light" className="muted-2" aria-hidden="true" />
+              <p className="display" style={{ fontSize: 18 }}>You have answered all of these.</p>
               <p className="small muted">That is a lot of your story written down.</p>
               <Link to="/remind-me" className="btn btn-accent">See what it says about you</Link>
             </div>

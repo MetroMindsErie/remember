@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import type { Attachment, Facets, Storage } from '../lib/types';
-import { CATEGORY_EMOJI, ErrorNote, Icons, feelingStyle } from '../lib/ui';
+import { ErrorNote, Icons, feelingStyle, categoryIcon} from '../lib/ui';
 import { MediaPicker } from '../components/MediaPicker';
+import { Camera, FilmStrip, MusicNote } from '@phosphor-icons/react';
 
 /**
  * Capture mode.
@@ -86,12 +87,12 @@ export default function Capture() {
   const fs = feelingStyle(feeling);
 
   return (
-    <div className="stack-l fade-in">
+    <div className="stack-l fade">
       <div className="page-head stack-s" style={{ paddingBottom: 8 }}>
         <button className="back-link" onClick={() => nav(-1)}>
           <span style={{ width: 15, height: 15, display: 'block' }}><Icons.back /></span> Back
         </button>
-        <h1 className="serif">Capture a moment</h1>
+        <h1 className="display">Capture a moment</h1>
         <p className="sub">
           Drop in the photos and videos while it is still fresh, say what happened,
           and it lands on your timeline.
@@ -105,9 +106,9 @@ export default function Capture() {
 
       {attachments.length > 0 && (
         <div className="row-wrap">
-          {counts.photo > 0 && <span className="badge badge-time">📷 {counts.photo} {counts.photo === 1 ? 'photo' : 'photos'}</span>}
-          {counts.video > 0 && <span className="badge badge-cat">🎬 {counts.video} {counts.video === 1 ? 'video' : 'videos'}</span>}
-          {counts.audio > 0 && <span className="badge badge-feel">🎵 {counts.audio} audio</span>}
+          {counts.photo > 0 && <span className="badge"><Camera size={13} /> {counts.photo} {counts.photo === 1 ? 'photo' : 'photos'}</span>}
+          {counts.video > 0 && <span className="badge"><FilmStrip size={13} /> {counts.video} {counts.video === 1 ? 'video' : 'videos'}</span>}
+          {counts.audio > 0 && <span className="badge"><MusicNote size={13} /> {counts.audio} audio</span>}
         </div>
       )}
 
@@ -127,7 +128,7 @@ export default function Capture() {
         <textarea
           id="cap-text" className="textarea" value={text}
           onChange={(e) => setText(e.target.value)}
-          placeholder="Just how the day went. The bits you will want back in ten years — who said what, what went wrong, what you ate."
+          placeholder="Just how the day went. The bits you will want back in ten years, who said what, what went wrong, what you ate."
           rows={6}
         />
       </div>
@@ -161,7 +162,7 @@ export default function Capture() {
                   ? { background: s.fg, borderColor: s.fg, color: '#fff' }
                   : { background: s.bg, borderColor: 'transparent', color: s.fg }}
               >
-                <span aria-hidden="true">{s.emoji}</span> {f}
+                <s.Icon size={14} weight="fill" /> {f}
               </button>
             );
           })}
@@ -179,7 +180,7 @@ export default function Capture() {
       </button>
 
       {more && (
-        <div className="stack-l fade-in">
+        <div className="stack-l fade">
           <div className="field">
             <label htmlFor="cap-people">Who was there?</label>
             <input
@@ -212,7 +213,7 @@ export default function Capture() {
                   key={c} type="button" className="chip"
                   aria-pressed={category === c} onClick={() => setCategory(c)}
                 >
-                  <span aria-hidden="true">{CATEGORY_EMOJI[c] ?? '✨'}</span> {c}
+                  {(() => { const I = categoryIcon(c); return <I size={14} />; })()} {c}
                 </button>
               ))}
             </div>
@@ -223,7 +224,7 @@ export default function Capture() {
             <textarea
               id="cap-meaning" className="textarea" value={meaning}
               onChange={(e) => setMeaning(e.target.value)}
-              placeholder="Optional — but this is the part Remember reads back to you later."
+              placeholder="Optional, but this is the part Remember reads back to you later."
               rows={4}
             />
           </div>
@@ -248,7 +249,7 @@ export default function Capture() {
           <span className="tiny" style={{ color: fs.fg, fontWeight: 700, letterSpacing: '.05em' }}>
             GOING ON YOUR TIMELINE
           </span>
-          <p className="serif" style={{ fontSize: 18, color: fs.fg }}>
+          <p className="display" style={{ fontSize: 18, color: fs.fg }}>
             {title.trim() || defaultTitle(attachments, place)}
           </p>
           <p className="small" style={{ color: fs.fg, opacity: .8 }}>

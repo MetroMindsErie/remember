@@ -47,7 +47,7 @@ export default function Settings() {
       setSaved(r.birthYear);
       setToast(
         r.birthYear
-          ? `Saved — re-dated ${r.redated} ${r.redated === 1 ? 'memory' : 'memories'}`
+          ? `Saved, re-dated ${r.redated} ${r.redated === 1 ? 'memory' : 'memories'}`
           : 'Birth year cleared'
       );
     } catch (e) {
@@ -58,22 +58,22 @@ export default function Settings() {
   }
 
   return (
-    <div className="stack-l fade-in">
+    <div className="stack-l fade">
       <div className="page-head stack-s" style={{ paddingBottom: 8 }}>
         <button className="back-link" onClick={() => nav(-1)}>
           <span style={{ width: 15, height: 15, display: 'block' }}><Icons.back /></span> Back
         </button>
-        <h1 className="serif">Settings & privacy</h1>
+        <h1 className="display">Settings & privacy</h1>
       </div>
 
       {error && <ErrorNote error={error} />}
 
       {/* ------------------------------------------------------ birth year */}
       <section className="card card-lg stack">
-        <h2 className="serif" style={{ fontSize: 17 }}>Your birth year</h2>
+        <h2 className="display" style={{ fontSize: 17 }}>Your birth year</h2>
         <p className="small muted">
           Optional, and it only does one thing: it lets Remember place memories you dated
-          loosely — “high school”, “age 16”, “childhood” — in the right order next to the
+          loosely, “high school”, “age 16”, “childhood”. In the right order next to the
           ones you dated by year. Without it those memories still save fine, they just sit
           in their own life-stage sections.
         </p>
@@ -99,7 +99,7 @@ export default function Settings() {
 
       {/* ----------------------------------------------------------- theme */}
       <section className="card card-lg stack">
-        <h2 className="serif" style={{ fontSize: 17 }}>Appearance</h2>
+        <h2 className="display" style={{ fontSize: 17 }}>Appearance</h2>
         <div className="row-wrap">
           {(['system', 'light', 'dark'] as const).map((t) => (
             <button key={t} className="chip" aria-pressed={theme === t} onClick={() => setTheme(t)}>
@@ -113,7 +113,7 @@ export default function Settings() {
       <section className="card card-lg stack">
         <div className="row" style={{ gap: 8 }}>
           <span style={{ width: 17, height: 17, color: 'var(--accent)' }}><Icons.lock /></span>
-          <h2 className="serif" style={{ fontSize: 17 }}>Where your memories live</h2>
+          <h2 className="display" style={{ fontSize: 17 }}>Where your memories live</h2>
         </div>
         <p className="small muted" style={{ lineHeight: 1.65 }}>
           Your memories are personal. This app is designed for private reflection.
@@ -124,8 +124,7 @@ export default function Settings() {
           <li>There are no accounts, no analytics, no tracking and no third parties.</li>
           <li>
             The AI that reads your memories is an <strong>open-weight model running on this
-            same server</strong>. Your memory text is turned into vectors in this process —
-            it is not sent to any API.
+            same server</strong>. Your memory text is turned into vectors in this process. It is not sent to any API.
           </li>
           <li>Nothing is public. Remember has no sharing or social features at all.</li>
         </ul>
@@ -136,7 +135,7 @@ export default function Settings() {
         <section className="card card-lg stack">
           <div className="row" style={{ gap: 8 }}>
             <span style={{ width: 17, height: 17, color: 'var(--ink-3)' }}><Icons.cpu /></span>
-            <h2 className="serif" style={{ fontSize: 17 }}>The AI, in plain terms</h2>
+            <h2 className="display" style={{ fontSize: 17 }}>The AI, in plain terms</h2>
           </div>
           <div className="stack-s small muted" style={{ lineHeight: 1.65 }}>
             <p>
@@ -156,7 +155,7 @@ export default function Settings() {
               ) : (
                 <>
                   no language model is configured, so reflections come from the built-in
-                  composer. Everything works without one — a model is purely optional polish.
+                  composer. Everything works without one. A model is purely optional polish.
                 </>
               )}
             </p>
@@ -166,11 +165,11 @@ export default function Settings() {
 
       {/* ------------------------------------------------------------ urge */}
       <section className="card card-flat stack-s">
-        <h2 className="serif" style={{ fontSize: 15 }}>Coming later</h2>
+        <h2 className="display" style={{ fontSize: 15 }}>Coming later</h2>
         <p className="tiny muted" style={{ lineHeight: 1.65 }}>
           Remember is built to be opened from the Urge app as a coping tool called
           <strong> “Reconnect With Yourself.”</strong> That integration is not wired up
-          yet — the two apps are deliberately separate for now.
+          yet, the two apps are deliberately separate for now.
         </p>
       </section>
 

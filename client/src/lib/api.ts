@@ -84,7 +84,7 @@ export const api = {
         if (xhr.status >= 200 && xhr.status < 300) resolve(body as UploadResult);
         else reject(new Error((body as { error?: string })?.error || `Upload failed (${xhr.status})`));
       };
-      xhr.onerror = () => reject(new Error('Upload failed — check your connection.'));
+      xhr.onerror = () => reject(new Error('Upload failed, check your connection.'));
       xhr.onabort = () => reject(new Error('Upload cancelled.'));
       xhr.send(form);
     });

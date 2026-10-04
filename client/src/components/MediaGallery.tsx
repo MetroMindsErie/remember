@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import type { Attachment } from '../lib/types';
 import { embedUrl } from '../lib/embed';
+import { CaretLeft, CaretRight } from '@phosphor-icons/react';
+import { MusicNote, LinkSimple } from '@phosphor-icons/react';
 
 /**
  * Shows a memory's files. Photos get a collage whose shape depends on how many
@@ -43,7 +45,7 @@ export function MediaGallery({ items, title }: { items: Attachment[]; title: str
   return (
     <div className="stack-s">
       {photos.length > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 4, borderRadius: 14, overflow: 'hidden' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 4, borderRadius: 'var(--r-input)', overflow: 'hidden' }}>
           {shown.map((p, i) => (
             <button
               key={p.id}
@@ -83,7 +85,7 @@ export function MediaGallery({ items, title }: { items: Attachment[]; title: str
             controls
             preload="metadata"
             playsInline
-            style={{ width: '100%', borderRadius: 14, background: '#000', maxHeight: 420 }}
+            style={{ width: '100%', borderRadius: 'var(--r-input)', background: '#000', maxHeight: 420 }}
           />
           {v.caption && <figcaption className="tiny muted">{v.caption}</figcaption>}
         </figure>
@@ -92,7 +94,7 @@ export function MediaGallery({ items, title }: { items: Attachment[]; title: str
       {audio.map((a) => (
         <figure key={a.id} style={{ margin: 0 }} className="stack-s">
           <div className="card card-flat row" style={{ gap: 10, padding: 10 }}>
-            <span aria-hidden="true" style={{ fontSize: 20 }}>🎵</span>
+            <MusicNote size={19} className="muted-2" aria-hidden="true" />
             <div className="grow" style={{ minWidth: 0 }}>
               <audio src={a.url} controls preload="metadata" style={{ width: '100%' }} />
             </div>
@@ -107,7 +109,7 @@ export function MediaGallery({ items, title }: { items: Attachment[]; title: str
           return (
             <figure key={l.id} style={{ margin: 0 }} className="stack-s">
               {embed.kind === 'video' ? (
-                <div style={{ position: 'relative', paddingTop: '56.25%', borderRadius: 14, overflow: 'hidden' }}>
+                <div style={{ position: 'relative', paddingTop: '56.25%', borderRadius: 'var(--r-input)', overflow: 'hidden' }}>
                   <iframe
                     src={embed.src} title={l.caption || l.name || 'Video'} loading="lazy" allowFullScreen
                     allow="accelerometer; clipboard-write; encrypted-media; picture-in-picture"
@@ -118,7 +120,7 @@ export function MediaGallery({ items, title }: { items: Attachment[]; title: str
                 <iframe
                   src={embed.src} title={l.caption || l.name || 'Audio'} loading="lazy"
                   allow="encrypted-media; clipboard-write"
-                  style={{ width: '100%', height: 152, border: 0, borderRadius: 14 }}
+                  style={{ width: '100%', height: 152, border: 0, borderRadius: 'var(--r-input)' }}
                 />
               )}
               {l.caption && <figcaption className="tiny muted">{l.caption}</figcaption>}
@@ -130,7 +132,7 @@ export function MediaGallery({ items, title }: { items: Attachment[]; title: str
             key={l.id} href={l.url} target="_blank" rel="noopener noreferrer nofollow"
             className="card card-flat row" style={{ gap: 10, padding: 10, color: 'inherit', textDecoration: 'none' }}
           >
-            <span aria-hidden="true" style={{ fontSize: 18 }}>🔗</span>
+            <LinkSimple size={17} className="muted-2" aria-hidden="true" />
             <span className="grow small" style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {l.caption || l.name || l.url}
             </span>
@@ -142,7 +144,7 @@ export function MediaGallery({ items, title }: { items: Attachment[]; title: str
       {/*
         Rendered into document.body on purpose. The memory card carries a
         `rise` animation with fill-mode `both`, which leaves a stacking context
-        on the card permanently — so a position:fixed overlay rendered inside it
+        on the card permanently, so a position:fixed overlay rendered inside it
         is trapped there and the bottom nav paints over the top of it. A portal
         is the only reliable fix.
       */}
@@ -164,7 +166,7 @@ export function MediaGallery({ items, title }: { items: Attachment[]; title: str
             src={photos[lightbox].url}
             alt={photos[lightbox].caption || `Photo from ${title}`}
             onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: '100%', maxHeight: '74vh', objectFit: 'contain', borderRadius: 10 }}
+            style={{ maxWidth: '100%', maxHeight: '74vh', objectFit: 'contain', borderRadius: 'var(--r-input)' }}
           />
           {photos[lightbox].caption && (
             <p className="small" style={{ color: '#f2e9df', textAlign: 'center', maxWidth: 520 }}>
@@ -177,14 +179,14 @@ export function MediaGallery({ items, title }: { items: Attachment[]; title: str
                 <button
                   className="btn btn-sm"
                   onClick={() => setLightbox((i) => (i! - 1 + photos.length) % photos.length)}
-                >‹ Prev</button>
+                ><CaretLeft size={14} weight="bold" /> Prev</button>
                 <span className="small" style={{ color: '#c0b2a6' }}>
                   {lightbox + 1} / {photos.length}
                 </span>
                 <button
                   className="btn btn-sm"
                   onClick={() => setLightbox((i) => (i! + 1) % photos.length)}
-                >Next ›</button>
+                >Next <CaretRight size={14} weight="bold" /></button>
               </>
             )}
             <button className="btn btn-sm btn-accent" onClick={() => setLightbox(null)}>Close</button>

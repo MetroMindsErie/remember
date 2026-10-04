@@ -4,7 +4,7 @@
  * Remember never *requires* this. The composer already produces the full
  * reflection; an LLM only rewrites it in warmer prose. We talk to it over the
  * OpenAI-compatible chat-completions shape, which is the de-facto standard that
- * every open-weight serving stack speaks — Ollama, llama.cpp's server, vLLM,
+ * every open-weight serving stack speaks, Ollama, llama.cpp's server, vLLM,
  * TGI, Together, Groq, Fireworks, OpenRouter.
  *
  * The practical consequence: you point BASE_URL at localhost and run
@@ -20,7 +20,7 @@ const API_KEY = process.env.OPEN_MODEL_API_KEY || '';
 // A local 7-8B model on consumer CPU takes 20-30s for a reflection; a hosted
 // open-weight endpoint takes 1-3s. The old 25s default sat right on top of the
 // local figure, so self-hosted setups timed out roughly half the time and ate
-// the full wait before falling back — the worst of both. 45s clears local.
+// the full wait before falling back, the worst of both. 45s clears local.
 const TIMEOUT_MS = Number(process.env.OPEN_MODEL_TIMEOUT_MS || 45000);
 // Deliberately low. This is a rewriting job over somebody's real life, not a
 // creative one: every degree of extra temperature buys warmth at the cost of
@@ -42,7 +42,7 @@ You will be given (a) structured facts drawn from one person's own saved memorie
 
 Hard rules:
 - Use ONLY the facts provided. Never invent a person, place, event, date or feeling that is not there.
-- Treat every memory title as a fixed phrase. Do not reinterpret what one means, do not expand it, and do not guess at the story behind it. "Three years clean" is a milestone someone reached — it is not three years of struggle. If you are not certain what a title refers to, repeat it verbatim and say nothing further about it.
+- Treat every memory title as a fixed phrase. Do not reinterpret what one means, do not expand it, and do not guess at the story behind it. "Three years clean" is a milestone someone reached. It is not three years of struggle. If you are not certain what a title refers to, repeat it verbatim and say nothing further about it.
 - Do not add sensory or descriptive colour that was not given to you. No "sun-kissed beaches", no weather, no time of day, no detail about what a place looked like.
 - Do not estimate or characterise spans of time. If you were not given a number of years, do not state one.
 - Address the person as "you". Never use their name unless it appears in the facts.
@@ -74,14 +74,14 @@ async function chat(messages, { maxTokens = 900, temperature = TEMPERATURE } = {
       }),
     });
     if (!res.ok) {
-      console.warn(`[llm] ${res.status} from ${BASE_URL} — falling back to composer`);
+      console.warn(`[llm] ${res.status} from ${BASE_URL}, falling back to composer`);
       return null;
     }
     const json = await res.json();
     const text = json?.choices?.[0]?.message?.content;
     return typeof text === 'string' && text.trim() ? text.trim() : null;
   } catch (err) {
-    console.warn(`[llm] ${err.name === 'AbortError' ? 'timed out' : err.message} — falling back to composer`);
+    console.warn(`[llm] ${err.name === 'AbortError' ? 'timed out' : err.message}, falling back to composer`);
     return null;
   } finally {
     clearTimeout(timer);
@@ -103,7 +103,7 @@ function factSheet(signals) {
   return lines.join('\n');
 }
 
-/** Rewrites a reminder. Returns null when unavailable — callers keep the draft. */
+/** Rewrites a reminder. Returns null when unavailable, callers keep the draft. */
 export async function polishReminder(signals, draft) {
   if (!llmStatus().configured || signals.total === 0) return null;
   const text = await chat([

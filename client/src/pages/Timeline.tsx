@@ -2,8 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { api, type TimelineQuery } from '../lib/api';
 import type { Facets, Memory } from '../lib/types';
-import { CATEGORY_EMOJI, Empty, ErrorNote, Icons, Spinner, Toast, feelingStyle } from '../lib/ui';
+import { Empty, ErrorNote, Icons, Spinner, Toast } from '../lib/ui';
 import { MemoryCard } from '../components/MemoryCard';
+import { MagnifyingGlass, Butterfly, X } from '@phosphor-icons/react';
 
 type FilterKey = 'category' | 'feeling' | 'person' | 'tag' | 'place';
 
@@ -100,9 +101,9 @@ export default function Timeline() {
   }
 
   return (
-    <div className="stack-l fade-in">
+    <div className="stack-l fade">
       <div className="page-head">
-        <h1 className="serif">My Timeline</h1>
+        <h1 className="display">My Timeline</h1>
         <p className="sub">
           {loading ? 'Loading…'
             : memories.length === 0 ? 'Nothing here yet.'
@@ -137,13 +138,13 @@ export default function Timeline() {
             aria-label="Clear search"
             style={{ position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)' }}
           >
-            ✕
+            <X size={15} weight="bold" />
           </button>
         )}
       </div>
       {searchBox && (
         <p className="tiny muted-2" style={{ marginTop: -8 }}>
-          Searching by meaning, not just words — try “what did I survive” or “people who took care of me”.
+          Searching by meaning, not just words, try “what did I survive” or “people who took care of me”.
         </p>
       )}
 
@@ -174,12 +175,12 @@ export default function Timeline() {
             {query.sort === 'oldest' ? '↑ Oldest first' : '↓ Newest first'}
           </button>
           {(active.length > 0 || searchBox) && (
-            <button className="chip" onClick={clearAll}>Clear all ✕</button>
+            <button className="chip" onClick={clearAll}>Clear all <X size={13} weight="bold" /></button>
           )}
         </div>
 
         {openFilter && (
-          <div className="card card-flat stack-s fade-in">
+          <div className="card card-flat stack-s fade">
             <span className="tiny muted-2" style={{ fontWeight: 700, letterSpacing: '.05em' }}>
               {FILTER_LABEL[openFilter].toUpperCase()}
             </span>
@@ -190,8 +191,8 @@ export default function Timeline() {
                   aria-pressed={query[openFilter] === opt}
                   onClick={() => setFilter(openFilter, opt)}
                 >
-                  {openFilter === 'category' && <span aria-hidden="true">{CATEGORY_EMOJI[opt] ?? '✨'}</span>}
-                  {openFilter === 'feeling' && <span aria-hidden="true">{feelingStyle(opt).emoji}</span>}
+                  {openFilter === 'category' && <span aria-hidden="true"></span>}
+                  {openFilter === 'feeling' && <span aria-hidden="true">{null}</span>}
                   {openFilter === 'tag' ? `#${opt}` : opt}
                 </button>
               ))}
@@ -207,14 +208,14 @@ export default function Timeline() {
       {!loading && memories.length === 0 && !error && (
         active.length > 0 || searchBox ? (
           <Empty
-            emoji="🔍"
+            icon={MagnifyingGlass}
             title="Nothing matches that"
             body="Try a different word, or clear the filters to see everything again."
             action={<button className="btn btn-ghost" onClick={clearAll}>Clear filters</button>}
           />
         ) : (
           <Empty
-            emoji="🕊️"
+            icon={Butterfly}
             title="Your timeline is waiting"
             body="Save one memory and it will show up here. Remember builds your story, your insights and your reflections from whatever you put in."
             action={<Link to="/add" className="btn btn-accent">Add a memory</Link>}
@@ -227,7 +228,7 @@ export default function Timeline() {
         {groups.map((group) => (
           <section key={group.chapter} className="stack">
             <div className="row" style={{ gap: 10 }}>
-              <h2 className="serif" style={{ fontSize: 15, letterSpacing: '.02em', color: 'var(--ink-2)' }}>
+              <h2 className="display" style={{ fontSize: 15, letterSpacing: '.02em', color: 'var(--ink-2)' }}>
                 {group.chapter}
               </h2>
               <hr className="divider grow" />
@@ -239,7 +240,7 @@ export default function Timeline() {
                   key={m.id}
                   style={
                     location.state?.highlight === m.id
-                      ? { outline: '2.5px solid var(--accent)', borderRadius: 'var(--radius-lg)' }
+                      ? { outline: '2.5px solid var(--accent)', borderRadius: 'var(--r-surface)' }
                       : undefined
                   }
                 >

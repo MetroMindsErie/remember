@@ -7,7 +7,7 @@
  * into DATA_DIR/model-cache and after that everything runs offline.
  *
  * That choice is the whole point. These embeddings are computed over somebody's
- * most private memories — a breakup, a funeral, a relapse, a childhood bedroom.
+ * most private memories. A breakup, a funeral, a relapse, a childhood bedroom.
  * Open weights mean that text is vectorised on hardware the user controls and
  * never crosses a network boundary it did not have to cross.
  */

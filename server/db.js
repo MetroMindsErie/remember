@@ -162,7 +162,7 @@ export function attachmentsFor(memoryId) {
     .all(memoryId);
 }
 
-/** All attachments, grouped by memory — one query instead of N. */
+/** All attachments, grouped by memory, one query instead of N. */
 export function attachmentMap() {
   const map = new Map();
   for (const a of db.prepare('SELECT * FROM attachments ORDER BY position, created_at').all()) {

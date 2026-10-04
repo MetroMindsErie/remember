@@ -135,7 +135,7 @@ export const STORY_LENSES = [
     query: 'where I am right now, who I am becoming, what I am working toward lately' },
 ];
 
-/** Feelings grouped by valence — used for the emotional arc, never to judge. */
+/** Feelings grouped by valence, used for the emotional arc, never to judge. */
 export const FEELING_TONE = {
   Happy: 1, Proud: 1, Peaceful: 1, Motivated: 1, Loved: 1, Grateful: 1,
   Hopeful: 1, Strong: 1, Resilient: 1,
