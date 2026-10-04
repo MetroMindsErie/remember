@@ -5,6 +5,19 @@ import { MediaGallery } from './MediaGallery';
 import { embedUrl, hostOf } from '../lib/embed';
 import { User, MapPin, Sparkle, CalendarBlank } from '@phosphor-icons/react';
 
+/**
+ * When a memory was added, as opposed to when it happened. Shown quietly in the
+ * expanded card so the two are never confused: somebody uploading a photo from
+ * 2015 today should be able to see that Remember filed it under 2015.
+ */
+function savedOn(iso: string) {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '';
+  const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July',
+    'August', 'September', 'October', 'November', 'December'];
+  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`;
+}
+
 function MediaLink({ url, icon, label }: { url: string; icon: JSX.Element; label: string }) {
   return (
     <a
@@ -40,7 +53,6 @@ export function MemoryCard({
 
   return (
     <article className="card card-lg card-raised stack rise" style={{ gap: 13, overflow: 'hidden' }}>
-      {/* a thin emotional stripe, so the feeling reads before the words do */}
       {/* A hairline in the feeling's hue. Reads the emotional register of the
           card before a single word of it. */}
       <div
@@ -197,6 +209,14 @@ export function MemoryCard({
       {open && memory.prompt && (
         <p className="tiny muted-2" style={{ fontStyle: 'italic' }}>
           Answered the prompt: “{memory.prompt}”
+        </p>
+      )}
+
+      {open && savedOn(memory.created_at) && (
+        <p className="tiny muted-2">
+          {memory.dateLabel
+            ? `Happened ${memory.dateLabel}. Added ${savedOn(memory.created_at)}.`
+            : `Added ${savedOn(memory.created_at)}.`}
         </p>
       )}
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CalendarBlank, ChatText, Sparkle } from '@phosphor-icons/react';
 
 /**
@@ -36,14 +36,42 @@ export function WhenField({
 }) {
   const [mode, setMode] = useState<'exact' | 'rough'>(happenedOn ? 'exact' : 'rough');
 
-  // A photo arriving with a date should move the control to exact mode, but
-  // never overwrite a date the person set themselves.
-  useEffect(() => {
-    if (suggestion?.date && !happenedOn && mode !== 'exact') setMode('exact');
-  }, [suggestion?.date, happenedOn, mode]);
+  /**
+   * Has the person actually chosen a date, as opposed to the field just
+   * sitting on its default? This is the difference between "the day this
+   * happened" and "the day they happened to upload it", and the whole point
+   * of the field is that those are not the same date.
+   */
+  const userPicked = useRef(false);
+  const [autoApplied, setAutoApplied] = useState<string | null>(null);
 
-  const setExact = (date: string) => onChange({ happenedOn: date, timePeriod });
-  const setRough = (text: string) => onChange({ happenedOn: '', timePeriod: text });
+  /**
+   * When the photos know when they were taken and the person has not said
+   * otherwise, use the photo date. Offering it as a tap meant a batch of old
+   * photos quietly saved under today's date whenever the prompt went unnoticed,
+   * which is exactly the bug this field exists to prevent.
+   */
+  useEffect(() => {
+    if (!suggestion?.date || userPicked.current) return;
+    if (suggestion.date === happenedOn) return;
+    setMode('exact');
+    setAutoApplied(suggestion.date);
+    onChange({ happenedOn: suggestion.date, timePeriod });
+    // onChange is recreated each render by the callers, so it is deliberately
+    // not a dependency: including it would re-fire this on every keystroke.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [suggestion?.date]);
+
+  const setExact = (date: string) => {
+    userPicked.current = true;
+    setAutoApplied(null);
+    onChange({ happenedOn: date, timePeriod });
+  };
+  const setRough = (text: string) => {
+    userPicked.current = true;
+    setAutoApplied(null);
+    onChange({ happenedOn: '', timePeriod: text });
+  };
 
   return (
     <div className="field">
@@ -75,9 +103,20 @@ export function WhenField({
             onChange={(e) => setExact(e.target.value)}
           />
           <span className="help">
-            Pick the day it happened. Memories with a real date sort exactly, however
-            you added them.
+            The day it happened, which does not have to be the day you add it here.
+            Memories with a real date sort exactly, whenever you got round to saving them.
           </span>
+
+          {autoApplied && autoApplied === happenedOn && (
+            <div className="notice">
+              <Sparkle size={16} weight="fill" />
+              <span className="grow">
+                Dated <strong>{formatHuman(autoApplied)}</strong>, from when your{' '}
+                {suggestion?.plural ? 'photos were' : 'photo was'} taken. Change it above
+                if that is not right.
+              </span>
+            </div>
+          )}
 
           {suggestion?.date && suggestion.date !== happenedOn && (
             <button
