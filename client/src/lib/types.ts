@@ -1,5 +1,7 @@
 export type Attachment = {
   id: string;
+  /** YYYY-MM-DD read from the file's own metadata, when it had one. */
+  capturedAt?: string;
   kind: 'photo' | 'video' | 'audio' | 'link';
   url: string;
   name: string;
@@ -31,6 +33,10 @@ export type Memory = {
   people: string[];
   place: string;
   time_period: string;
+  /** YYYY-MM-DD when the person picked a real date, otherwise empty. */
+  happened_on: string;
+  /** Pre-formatted label for happened_on, e.g. "14 June 2019". */
+  dateLabel: string;
   time_sort: number | null;
   chapter: string;
   category: string;

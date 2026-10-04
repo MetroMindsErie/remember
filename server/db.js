@@ -16,6 +16,7 @@ db.exec(`
     people         TEXT NOT NULL DEFAULT '[]',
     place          TEXT NOT NULL DEFAULT '',
     time_period    TEXT NOT NULL DEFAULT '',
+    happened_on    TEXT NOT NULL DEFAULT '',
     time_sort      REAL,
     category       TEXT NOT NULL DEFAULT 'Other',
     feeling        TEXT NOT NULL DEFAULT 'Nostalgic',
@@ -65,6 +66,24 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_memories_category  ON memories(category);
   CREATE INDEX IF NOT EXISTS idx_memories_feeling   ON memories(feeling);
 `);
+
+/**
+ * Columns added after the first release. SQLite has no "ADD COLUMN IF NOT
+ * EXISTS", so we check the table and add what is missing. This runs on every
+ * boot and is a no-op once applied, which keeps existing databases (including
+ * the one already live on Render) working across deploys.
+ */
+const MIGRATIONS = [
+  { table: 'memories', column: 'happened_on', ddl: "TEXT NOT NULL DEFAULT ''" },
+];
+
+for (const { table, column, ddl } of MIGRATIONS) {
+  const cols = db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name);
+  if (!cols.includes(column)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${ddl}`);
+    console.log(`[db] added ${table}.${column}`);
+  }
+}
 
 const JSON_FIELDS = ['people', 'tags'];
 

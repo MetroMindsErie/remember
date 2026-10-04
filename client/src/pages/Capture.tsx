@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import type { Attachment, Facets, Storage } from '../lib/types';
 import { ErrorNote, Icons, feelingStyle, categoryIcon} from '../lib/ui';
 import { MediaPicker } from '../components/MediaPicker';
+import { WhenField, QUICK_WHEN, todayISO } from '../components/WhenField';
 import { Camera, FilmStrip, MusicNote } from '@phosphor-icons/react';
 
 /**
@@ -16,15 +17,14 @@ import { Camera, FilmStrip, MusicNote } from '@phosphor-icons/react';
  * below the fold.
  */
 
-const QUICK_WHEN = ['today', 'yesterday', 'this weekend', 'last week', 'last month'];
-
 export default function Capture() {
   const nav = useNavigate();
 
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
-  const [when, setWhen] = useState('today');
+  const [happenedOn, setHappenedOn] = useState(todayISO());
+  const [when, setWhen] = useState('');
   const [people, setPeople] = useState('');
   const [place, setPlace] = useState('');
   const [category, setCategory] = useState('Other');
@@ -65,6 +65,7 @@ export default function Capture() {
         memory_text: text,
         meaning,
         time_period: when,
+        happened_on: happenedOn,
         people: people.split(',').map((s) => s.trim()).filter(Boolean),
         place,
         category,
@@ -78,6 +79,27 @@ export default function Capture() {
       setSaving(false);
     }
   }
+
+  /**
+   * The date the photos themselves claim. Phones stamp capture time into every
+   * shot, so a batch dropped in any order still knows when it happened. We
+   * offer the earliest rather than applying it silently, and flag it when the
+   * batch clearly spans more than one day.
+   */
+  const photoDate = (() => {
+    const dates = attachments.map((a) => a.capturedAt).filter(Boolean) as string[];
+    if (!dates.length) return null;
+    const sorted = [...dates].sort();
+    const earliest = sorted[0];
+    const latest = sorted[sorted.length - 1];
+    return {
+      date: earliest,
+      from: dates.length === 1 ? 'photo' : 'photos',
+      plural: dates.length > 1,
+      // Only worth mentioning when the files genuinely are not one occasion.
+      range: earliest === latest ? undefined : ([earliest, latest] as [string, string]),
+    };
+  })();
 
   const counts = {
     photo: attachments.filter((a) => a.kind === 'photo').length,
@@ -133,20 +155,13 @@ export default function Capture() {
         />
       </div>
 
-      <div className="field">
-        <label>When?</label>
-        <div className="row-wrap">
-          {QUICK_WHEN.map((w) => (
-            <button key={w} type="button" className="chip" aria-pressed={when === w} onClick={() => setWhen(w)}>
-              {w}
-            </button>
-          ))}
-        </div>
-        <input
-          className="input" value={when} onChange={(e) => setWhen(e.target.value)}
-          placeholder="today" aria-label="When this happened" style={{ marginTop: 6 }}
-        />
-      </div>
+      <WhenField
+        happenedOn={happenedOn}
+        timePeriod={when}
+        onChange={({ happenedOn: d, timePeriod: p }) => { setHappenedOn(d); setWhen(p); }}
+        suggestion={photoDate}
+        quick={QUICK_WHEN}
+      />
 
       <div className="field">
         <label>How did it feel?</label>
@@ -253,7 +268,7 @@ export default function Capture() {
             {title.trim() || defaultTitle(attachments, place)}
           </p>
           <p className="small" style={{ color: fs.fg, opacity: .8 }}>
-            {when || 'no date'} · {feeling}
+            {happenedOn || when || 'no date'} · {feeling}
             {attachments.length > 0 && ` · ${attachments.length} ${attachments.length === 1 ? 'file' : 'files'}`}
           </p>
         </div>

@@ -71,6 +71,33 @@ function monthFraction(month) {
 }
 
 /**
+ * Turns an exact calendar date into the same sortable scale the fuzzy phrases
+ * use, so a memory dated from a photo and one dated "high school" can sit on
+ * one timeline and sort correctly against each other.
+ *
+ * @param {string} iso  YYYY-MM-DD
+ */
+export function sortFromDate(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || '').trim());
+  if (!m) return null;
+  const [, y, mo, d] = m.map(Number);
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+  // Fractional year, matching what parseTimePeriod produces for exact dates.
+  return y + (mo - 1 + (d - 1) / 31) / 12;
+}
+
+/** A readable label for an exact date, e.g. "14 June 2019". */
+export function formatDate(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || '').trim());
+  if (!m) return '';
+  const [, y, mo, d] = m.map(Number);
+  if (mo < 1 || mo > 12 || d < 1 || d > 31) return '';
+  const MONTH_NAMES = ['January','February','March','April','May','June','July',
+    'August','September','October','November','December'];
+  return `${d} ${MONTH_NAMES[mo - 1]} ${y}`;
+}
+
+/**
  * @param {string} input   what the user typed, e.g. "high school"
  * @param {object} [opts]
  * @param {number} [opts.birthYear] if known, ages and life stages become real years

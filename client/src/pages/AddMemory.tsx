@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import type { Facets } from '../lib/types';
 import { ErrorNote, Icons, Toast, feelingStyle, categoryIcon} from '../lib/ui';
 import { MediaPicker } from '../components/MediaPicker';
+import { WhenField } from '../components/WhenField';
 import type { Attachment } from '../lib/types';
 
 /**
@@ -13,13 +14,13 @@ import type { Attachment } from '../lib/types';
 
 type Draft = {
   title: string; memory_text: string; people: string; place: string;
-  time_period: string; category: string; feeling: string; meaning: string;
+  time_period: string; happened_on: string; category: string; feeling: string; meaning: string;
   photo_url: string; video_url: string; music_url: string;
   attachment_url: string; tags: string; prompt: string;
 };
 
 const EMPTY: Draft = {
-  title: '', memory_text: '', people: '', place: '', time_period: '',
+  title: '', memory_text: '', people: '', place: '', time_period: '', happened_on: '',
   category: 'Other', feeling: 'Nostalgic', meaning: '', photo_url: '',
   video_url: '', music_url: '', attachment_url: '', tags: '', prompt: '',
 };
@@ -31,8 +32,6 @@ const STEPS = [
   { key: 'why',   label: 'Why it matters' },
   { key: 'media', label: 'Add media' },
 ] as const;
-
-const TIME_EXAMPLES = ['childhood', 'high school', '2018', 'age 16', 'Christmas 2020', 'last year'];
 
 export default function AddMemory() {
   const nav = useNavigate();
@@ -72,6 +71,22 @@ export default function AddMemory() {
   }, [toast]);
 
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) => setDraft((d) => ({ ...d, [k]: v }));
+
+  // Photos carry the day they were taken; offer it rather than make them type it.
+  const photoDate = (() => {
+    const dates = attachments.map((a) => a.capturedAt).filter(Boolean) as string[];
+    if (!dates.length) return null;
+    const sorted = [...dates].sort();
+    const earliest = sorted[0];
+    const latest = sorted[sorted.length - 1];
+    return {
+      date: earliest,
+      from: dates.length === 1 ? 'photo' : 'photos',
+      plural: dates.length > 1,
+      // Only worth mentioning when the files genuinely are not one occasion.
+      range: earliest === latest ? undefined : ([earliest, latest] as [string, string]),
+    };
+  })();
 
   const canSave = draft.title.trim().length > 0;
   const isLast = step === STEPS.length - 1;
@@ -156,31 +171,13 @@ export default function AddMemory() {
             />
           </div>
 
-          <div className="field">
-            <label htmlFor="time_period">When did this happen?</label>
-            <input
-              id="time_period" className="input" value={draft.time_period}
-              onChange={(e) => set('time_period', e.target.value)}
-              placeholder="high school"
-              list="time-examples"
-            />
-            <datalist id="time-examples">
-              {TIME_EXAMPLES.map((t) => <option key={t} value={t} />)}
-            </datalist>
-            <span className="help">
-              However you remember it. “High school”, “2018”, “age 16” and “Christmas 2020”
-              all work, Remember figures out where it goes on your timeline.
-            </span>
-            <div className="row-wrap" style={{ marginTop: 2 }}>
-              {TIME_EXAMPLES.map((t) => (
-                <button key={t} className="chip" type="button"
-                        aria-pressed={draft.time_period === t}
-                        onClick={() => set('time_period', t)}>
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
+          <WhenField
+            happenedOn={draft.happened_on}
+            timePeriod={draft.time_period}
+            onChange={({ happenedOn, timePeriod }) =>
+              setDraft((d) => ({ ...d, happened_on: happenedOn, time_period: timePeriod }))}
+            suggestion={photoDate}
+          />
         </div>
       )}
 

@@ -8,7 +8,8 @@ import {
   attachmentsFor, attachmentMap, replaceAttachments,
 } from '../db.js';
 import { paths } from '../paths.js';
-import { parseTimePeriod, chapterFor } from '../timeperiod.js';
+import { parseTimePeriod, chapterFor, sortFromDate, formatDate } from '../timeperiod.js';
+import { captureDateOf } from '../exif.js';
 import { CATEGORIES, FEELINGS } from '../ai/anchors.js';
 import { ensureEmbeddings, semanticSearch } from '../ai/reflect.js';
 
@@ -69,15 +70,20 @@ const prettyBytes = (n) => {
   return `${Math.max(1, Math.round(n / 1024))}KB`;
 };
 
-function describe(file) {
+async function describe(file) {
+  const kind = kindOf(file.mimetype);
   return {
     id: nanoid(12),
-    kind: kindOf(file.mimetype),
+    kind,
     url: `/uploads/${file.filename}`,
     name: file.originalname.slice(0, 200),
     mime: file.mimetype,
     size: file.size,
     caption: '',
+    // The day the shutter was pressed, when the file still carries it. The
+    // client uses the earliest of these to date the memory, so a batch of
+    // holiday photos lands on the right day without anyone typing it.
+    capturedAt: kind === 'photo' ? await captureDateOf(file.path) : '',
   };
 }
 
@@ -86,7 +92,7 @@ function describe(file) {
  * memory yet, the client holds them while the person writes, then sends the
  * list with the memory. Anything abandoned is swept up by the orphan cleaner.
  */
-router.post('/uploads', upload.array('files', MAX_FILES), (req, res, next) => {
+router.post('/uploads', upload.array('files', MAX_FILES), async (req, res, next) => {
   try {
     const files = req.files || [];
     if (!files.length) return res.status(400).json({ error: 'No files received.' });
@@ -103,7 +109,7 @@ router.post('/uploads', upload.array('files', MAX_FILES), (req, res, next) => {
         rejected.push({ name: file.originalname, reason: `${kind} files are limited to ${prettyBytes(limit)}` });
         continue;
       }
-      accepted.push(describe(file));
+      accepted.push(await describe(file));
     }
     res.json({ files: accepted, rejected });
   } catch (err) {
@@ -186,7 +192,14 @@ function normalize(body) {
   const category = CATEGORIES.includes(body.category) ? body.category : 'Other';
   const feeling = FEELINGS.includes(body.feeling) ? body.feeling : 'Nostalgic';
   const time_period = str(body.time_period, 120);
-  const { sort } = parseTimePeriod(time_period, { birthYear: getBirthYear() });
+
+  // An exact date, when the person picked one or a photo supplied it, beats
+  // anything we could infer from a phrase. It drives the sort directly.
+  const happened_on = /^\d{4}-\d{2}-\d{2}$/.test(str(body.happened_on, 10))
+    ? str(body.happened_on, 10)
+    : '';
+  const exactSort = happened_on ? sortFromDate(happened_on) : null;
+  const sort = exactSort ?? parseTimePeriod(time_period, { birthYear: getBirthYear() }).sort;
 
   return {
     title,
@@ -194,6 +207,7 @@ function normalize(body) {
     people: asArray(body.people).slice(0, 40),
     place: str(body.place, 200),
     time_period,
+    happened_on,
     time_sort: sort,
     category,
     feeling,
@@ -210,6 +224,7 @@ function normalize(body) {
 const decorate = (m, attachments) => ({
   ...m,
   chapter: chapterFor(m.time_sort, m.time_period),
+  dateLabel: m.happened_on ? formatDate(m.happened_on) : '',
   attachments: attachments ?? attachmentsFor(m.id),
 });
 
@@ -281,12 +296,12 @@ router.post('/memories', async (req, res, next) => {
     db.prepare(
       `INSERT INTO memories (
          id, created_at, updated_at, title, memory_text, people, place,
-         time_period, time_sort, category, feeling, meaning, photo_url,
-         video_url, music_url, attachment_url, tags, prompt
+         time_period, happened_on, time_sort, category, feeling, meaning,
+         photo_url, video_url, music_url, attachment_url, tags, prompt
        ) VALUES (
          @id, @created_at, @updated_at, @title, @memory_text, @people, @place,
-         @time_period, @time_sort, @category, @feeling, @meaning, @photo_url,
-         @video_url, @music_url, @attachment_url, @tags, @prompt
+         @time_period, @happened_on, @time_sort, @category, @feeling, @meaning,
+         @photo_url, @video_url, @music_url, @attachment_url, @tags, @prompt
        )`
     ).run({
       ...data,
@@ -316,7 +331,8 @@ router.put('/memories/:id', async (req, res, next) => {
       `UPDATE memories SET
          updated_at = @updated_at, title = @title, memory_text = @memory_text,
          people = @people, place = @place, time_period = @time_period,
-         time_sort = @time_sort, category = @category, feeling = @feeling,
+         happened_on = @happened_on, time_sort = @time_sort,
+         category = @category, feeling = @feeling,
          meaning = @meaning, photo_url = @photo_url, video_url = @video_url,
          music_url = @music_url, attachment_url = @attachment_url,
          tags = @tags, prompt = @prompt
@@ -402,6 +418,8 @@ router.put('/settings', (req, res) => {
   const update = db.prepare('UPDATE memories SET time_sort = ? WHERE id = ?');
   const redate = db.transaction((rows) => {
     for (const m of rows) {
+      // A real date is already correct; only inferred ones get recomputed.
+      if (m.happened_on) continue;
       update.run(parseTimePeriod(m.time_period, { birthYear }).sort, m.id);
     }
   });

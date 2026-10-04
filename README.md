@@ -138,6 +138,17 @@ produces a sortable value:
 "senior year"      "2012-2015"        "last year"     "7/4/2018"
 ```
 
+When you do know the exact day, there is a calendar instead. A native date
+input, so on a phone it is the real system picker. Exact dates and loose
+phrases share one sortable scale, so they interleave correctly on the same
+timeline.
+
+Better still, you usually do not have to pick one. Photos carry the day they
+were taken in their own metadata, so dropping a batch into Capture reads the
+dates off the files and offers the earliest one. Upload forty photos in
+whatever order they came off the phone and the timeline still sorts itself. If
+the batch spans more than a day, Remember says so rather than guessing.
+
 Set an optional birth year and every relative memory resolves to a real year, so
 a timeline mixing *"childhood"*, *"10th grade"* and *"October 2019"* sorts
 correctly end to end:
@@ -151,6 +162,15 @@ correctly end to end:
 2014.5   age 22           The apartment on 8th
 2019.5   age 27           Graduating, finally, at 27
 2019.8   October 2019     The week before Dad died
+```
+
+An exact date drops into the same ordering without any special casing:
+
+```
+2014.5   age 22           The apartment on 8th
+2015.6   21 August 2015   The summer Nora learned to swim     <- from a photo
+2019.5   age 27           Graduating, finally, at 27
+2022.8   3 November 2022  Milo's first day of school          <- picked
 ```
 
 ---

@@ -3,7 +3,7 @@ import type { Memory } from '../lib/types';
 import { CategoryBadge, FeelingBadge, Icons, feelingStyle } from '../lib/ui';
 import { MediaGallery } from './MediaGallery';
 import { embedUrl, hostOf } from '../lib/embed';
-import { User, MapPin, Sparkle } from '@phosphor-icons/react';
+import { User, MapPin, Sparkle, CalendarBlank } from '@phosphor-icons/react';
 
 function MediaLink({ url, icon, label }: { url: string; icon: JSX.Element; label: string }) {
   return (
@@ -51,9 +51,15 @@ export function MemoryCard({
       <div className="spread" style={{ alignItems: 'flex-start' }}>
         <div className="grow stack-s">
           <h3 className="display" style={{ fontSize: 19, letterSpacing: '-.028em' }}>{memory.title}</h3>
-          {memory.time_period && (
+          {(memory.dateLabel || memory.time_period) && (
             <div className="row small muted" style={{ gap: 6 }}>
-              <span>{memory.time_period}</span>
+              {memory.dateLabel ? (
+                <span className="row" style={{ gap: 5 }}>
+                  <CalendarBlank size={13} /> {memory.dateLabel}
+                </span>
+              ) : (
+                <span>{memory.time_period}</span>
+              )}
               {memory.chapter && memory.chapter !== memory.time_period && (
                 <span className="muted-2">· {memory.chapter}</span>
               )}
