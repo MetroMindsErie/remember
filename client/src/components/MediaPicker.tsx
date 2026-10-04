@@ -13,6 +13,21 @@ import { Camera, FilmStrip, MusicNote, LinkSimple, Warning } from '@phosphor-ico
  * pressing Save is instant instead of a 100MB wait. The cost is files on disk
  * for abandoned captures, which the server sweeps.
  */
+/**
+ * Does this device actually have a camera the browser will hand us?
+ *
+ * `capture` is a mobile-only attribute. Desktop browsers parse it, keep it in
+ * the DOM, and then ignore it completely, so a "Take one now" button on a
+ * laptop silently opens an ordinary file picker. Rather than promise a camera
+ * we cannot open, detect support and only offer it where it works.
+ *
+ * Evaluated once at module load: whether an input supports `capture` does not
+ * change while the page is open.
+ */
+function canCapture() {
+  return typeof document !== 'undefined' && 'capture' in document.createElement('input');
+}
+
 export function MediaPicker({
   items, onChange, compact = false,
 }: {
@@ -21,13 +36,17 @@ export function MediaPicker({
   compact?: boolean;
 }) {
   const pickRef = useRef<HTMLInputElement>(null);
-  const cameraRef = useRef<HTMLInputElement>(null);
+  const photoRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [dragging, setDragging] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const [showLink, setShowLink] = useState(false);
+  // Read once per mount rather than at module load, so this stays correct if
+  // the component ever renders outside a browser.
+  const [cameraAvailable] = useState(canCapture);
 
   async function add(files: FileList | File[] | null) {
     const list = Array.from(files ?? []);
@@ -46,8 +65,9 @@ export function MediaPicker({
     } finally {
       setBusy(false);
       setProgress(0);
-      if (pickRef.current) pickRef.current.value = '';
-      if (cameraRef.current) cameraRef.current.value = '';
+      for (const r of [pickRef, photoRef, videoRef]) {
+        if (r.current) r.current.value = '';
+      }
     }
   }
 
@@ -108,12 +128,23 @@ export function MediaPicker({
         onChange={(e) => add(e.target.files)}
         aria-label="Choose photos, videos or audio"
       />
-      {/* `capture` opens the camera directly on a phone. */}
+      {/*
+        Two separate capture inputs rather than one combined one. Android
+        Chrome shows an app chooser when `accept` lists several types
+        alongside `capture`, which defeats the point. A single type per input
+        goes straight to the camera in the right mode on both platforms.
+      */}
       <input
-        ref={cameraRef} type="file" className="sr-only"
-        accept="image/*,video/*" capture="environment"
+        ref={photoRef} type="file" className="sr-only"
+        accept="image/*" capture="environment"
         onChange={(e) => add(e.target.files)}
-        aria-label="Take a photo or video"
+        aria-label="Take a photo"
+      />
+      <input
+        ref={videoRef} type="file" className="sr-only"
+        accept="video/*" capture="environment"
+        onChange={(e) => add(e.target.files)}
+        aria-label="Record a video"
       />
 
       <div
@@ -151,9 +182,16 @@ export function MediaPicker({
               <button type="button" className="btn btn-sm" onClick={() => pickRef.current?.click()}>
                 Choose files
               </button>
-              <button type="button" className="btn btn-sm btn-ghost" onClick={() => cameraRef.current?.click()}>
-                Take one now
-              </button>
+              {cameraAvailable && (
+                <>
+                  <button type="button" className="btn btn-sm btn-ghost" onClick={() => photoRef.current?.click()}>
+                    <Camera size={15} /> Take photo
+                  </button>
+                  <button type="button" className="btn btn-sm btn-ghost" onClick={() => videoRef.current?.click()}>
+                    <FilmStrip size={15} /> Record video
+                  </button>
+                </>
+              )}
               <button type="button" className="btn btn-sm btn-ghost" onClick={() => setShowLink((v) => !v)}>
                 Paste a link
               </button>
